@@ -1,7 +1,8 @@
+import abc
 import typing as t
-import bleach
-
 from dataclasses import dataclass
+
+import bleach
 
 from .exceptions import EditorJsParseError
 
@@ -20,7 +21,7 @@ def _sanitize(html: str) -> str:
     )
 
 
-BLOCKS_MAP: t.Dict[str, t.Type['EditorJsBlock']] = {
+BLOCKS_MAP: t.Dict[str, t.Type["EditorJsBlock"]] = {
     # 'header': HeaderBlock,
     # 'paragraph': ParagraphBlock,
     # 'list': ListBlock,
@@ -30,7 +31,7 @@ BLOCKS_MAP: t.Dict[str, t.Type['EditorJsBlock']] = {
 
 
 def block(_type: str):
-    def wrapper(cls: t.Type['EditorJsBlock']):
+    def wrapper(cls: t.Type["EditorJsBlock"]):
         BLOCKS_MAP[_type] = cls
         return cls
 
@@ -38,7 +39,7 @@ def block(_type: str):
 
 
 @dataclass
-class EditorJsBlock:
+class EditorJsBlock(abc.ABC):
     """
     A generic parsed Editor.js block
     """
@@ -70,6 +71,7 @@ class EditorJsBlock:
 
         return self._data.get("data", {})
 
+    @abc.abstractmethod
     def html(self, sanitize: bool = False) -> str:
         """
         Returns the HTML representation of the block.
@@ -225,3 +227,80 @@ class ImageBlock(EditorJsBlock):
         ]
 
         return "".join(parts)
+
+
+@block("quote")
+class QuoteBlock(EditorJsBlock):
+    def html(self, sanitize: bool = False) -> str:
+        quote = self.data.get("text", "")
+        caption = self.data.get("caption", "")
+        if sanitize:
+            quote = _sanitize(quote)
+            caption = _sanitize(caption)
+        _alignment = self.data.get("alignment", "left")  # todo
+        return f"""
+        <blockquote class="cdx-block cdx-quote">
+            <div class="cdx-input cdx-quote__text">{quote}</div>
+            <cite class="cdx-input cdx-quote__caption">{caption}</cite>
+        </blockquote>
+        """
+
+
+@block("table")
+class TableBlock(EditorJsBlock):
+    def html(self, sanitize: bool = False) -> str:
+        content = self.data.get("content", [])
+        _stretched = self.data.get("stretched", False)  # todo
+        _with_headings = self.data.get("withHeadings", False)  # todo
+
+        html_table = '<table class="tc-table">'
+
+        # Add content rows
+        for row in content:
+            html_table += '<tr class="tc-row">'
+            for cell in row:
+                html_table += (
+                    f'<td class="tc-cell">{_sanitize(cell) if sanitize else cell}</td>'
+                )
+            html_table += "</tr>"
+
+        html_table += "</table>"
+        return html_table
+
+
+@block("code")
+class CodeBlock(EditorJsBlock):
+    def html(self, sanitize: bool = False) -> str:
+        code = self.data.get("code", "")
+        if sanitize:
+            code = _sanitize(code)
+        return f"""
+        <code class="ce-code__textarea cdx-input" data-empty="false">{code}</code>
+        """
+
+
+@block("warning")
+class WarningBlock(EditorJsBlock):
+    def html(self, sanitize: bool = False) -> str:
+        title = self.data.get("title", "")
+        message = self.data.get("message", "")
+
+        if sanitize:
+            title = _sanitize(title)
+            message = _sanitize(message)
+
+        return f"""
+            <div class="cdx-block cdx-warning">
+                <div class="cdx-input cdx-warning__title">{title}</div>
+                <div class="cdx-input cdx-warning__message">{message}</div>
+            </div>
+        """
+
+
+@block("raw")
+class RawBlock(EditorJsBlock):
+    def html(self, sanitize: bool = False) -> str:
+        html = self.data.get("html", "")
+        if sanitize:
+            html = _sanitize(html)
+        return html
