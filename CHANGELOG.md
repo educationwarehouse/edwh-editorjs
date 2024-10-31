@@ -2,6 +2,16 @@
 
 <!--next-version-placeholder-->
 
+## v1.1.0 (2024-10-31)
+
+### Feature
+
+* Expose _sanitize via EditorJSBlock.sanitize for external usage ([`7daa67c`](https://github.com/educationwarehouse/edwh-editorjs/commit/7daa67c90440510c83b573c22edf377cc2fd801f))
+
+### Documentation
+
+* Added section on defining new custom blocks ([`51d7720`](https://github.com/educationwarehouse/edwh-editorjs/commit/51d77208d4f8156e895de914f41bdeb882a508c0))
+
 ## v1.0.1 (2024-10-31)
 
 ### Documentation
