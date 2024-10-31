@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyeditorjs"
+version = "1.0.0-beta"
+description = "pyEditorJS"
+readme = "README.md"
+authors = [
+    { name = "SKevo", email = "skevo.cw@gmail.com" },
+    { name = "Robin van der Noord", email = "robin.vdn@educationwarehouse.nl" },
+]
+license = { text = "MIT" }
+keywords = ["editor.js", "parser", "clean", "bleach", "wysiwyg", "editor", "javascript", "html", "json"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">=3.10"
+
+dependencies = [
+    "bleach"
+]
+
+[project.optional-dependencies]
+dev = [
+    "edwh",
+    "su6[all]",
+    "hatch",
+    "types-bleach",
+]
+
+[project.urls]
+Homepage = "https://github.com/educationwarehouse/edwh-EditorJS"
+
+[tool.setuptools.packages.find]
+include = ["pyeditorjs"]
+exclude = ["tests"]
+
+[tool.su6]
+directory = "pyeditorjs"
+stop-after-first-failure = true
