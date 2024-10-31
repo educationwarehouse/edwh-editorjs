@@ -7,3 +7,11 @@ documentation/
 
 dist/*
 *.egg-info
+.toml
+.env
+venv*
+*coverage*
+dist/
+build/
+example.*
+.idea/

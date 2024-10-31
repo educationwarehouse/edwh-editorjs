@@ -1,10 +1,11 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
-name = "pyeditorjs"
-version = "1.0.0-beta"
+name = "edwh-editorjs"
+dynamic = ["version"]
+
 description = "pyEditorJS"
 readme = "README.md"
 authors = [
@@ -38,6 +39,21 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/educationwarehouse/edwh-EditorJS"
+
+[tool.semantic_release]
+branch = "master"
+version_variable = "pyeditorjs/__about__.py:__version__"
+change_log = "CHANGELOG.md"
+upload_to_repository = false
+upload_to_release = false
+build_command = "hatch build"
+
+[tool.hatch.version]
+path = "pyeditorjs/__about__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["pyeditorjs"]
+
 
 [tool.setuptools.packages.find]
 include = ["pyeditorjs"]
