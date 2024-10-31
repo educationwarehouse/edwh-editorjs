@@ -47,6 +47,10 @@ class EditorJsBlock(abc.ABC):
     _data: dict
     """The raw JSON data of the entire block"""
 
+    @classmethod
+    def sanitize(cls, html: str) -> str:
+        return _sanitize(html)
+
     @property
     def id(self) -> t.Optional[str]:
         """

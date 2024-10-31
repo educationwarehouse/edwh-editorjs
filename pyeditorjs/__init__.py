@@ -1,12 +1,14 @@
 from pathlib import Path
 
 from .blocks import BLOCKS_MAP, EditorJsBlock, block
-from .exceptions import EditorJsParseError
+from .exceptions import EditorJsException, EditorJsParseError, EditorJSUnsupportedBlock
 from .parser import EditorJsParser
 
 __all__ = [
     "EditorJsParser",
     "EditorJsParseError",
+    "EditorJsException",
+    "EditorJSUnsupportedBlock",
     "EditorJsBlock",
     "block",
     "BLOCKS_MAP",
