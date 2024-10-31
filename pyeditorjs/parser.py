@@ -22,9 +22,7 @@ class EditorJsParser:
             )
 
     @staticmethod
-    def _get_block(
-        data: dict, strict: bool = False
-    ) -> t.Optional[t.Type[EditorJsBlock]]:
+    def _get_block(data: dict, strict: bool = False) -> t.Optional[EditorJsBlock]:
         """
         Obtains block instance from block data.
         """
@@ -40,12 +38,12 @@ class EditorJsParser:
 
         return BLOCKS_MAP[_type](_data=data)
 
-    def blocks(self, strict: bool = False) -> t.List[t.Type[EditorJsBlock]]:
+    def blocks(self, strict: bool = False) -> list[EditorJsBlock]:
         """
         Obtains a list of all available blocks from the editor's JSON data.
         """
 
-        all_blocks: t.List[t.Type[EditorJsBlock]] = []
+        all_blocks: list[EditorJsBlock] = []
         blocks = self.content.get("blocks", [])
 
         if not isinstance(blocks, list):
@@ -59,7 +57,7 @@ class EditorJsParser:
 
         return all_blocks
 
-    def __iter__(self) -> t.Iterator[t.Type[EditorJsBlock]]:
+    def __iter__(self) -> t.Iterator[EditorJsBlock]:
         """Returns `iter(self.blocks())`"""
 
         return iter(self.blocks())

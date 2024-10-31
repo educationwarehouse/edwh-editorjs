@@ -89,12 +89,12 @@ class HeaderBlock(EditorJsBlock):
     """Valid range for header levels. Default is `range(1, 7)` - so, `0` - `6`."""
 
     @property
-    def text(self) -> t.Optional[str]:
+    def text(self) -> str:
         """
         Returns the header's text.
         """
 
-        return self.data.get("text", None)
+        return self.data.get("text", "")
 
     @property
     def level(self) -> int:
@@ -110,18 +110,21 @@ class HeaderBlock(EditorJsBlock):
         return _level
 
     def html(self, sanitize: bool = False) -> str:
-        return rf'<h{self.level} class="cdx-block ce-header">{_sanitize(self.text) if sanitize else self.text}</h{self.level}>'
+        text = self.text
+        if sanitize:
+            text = _sanitize(text)
+        return rf'<h{self.level} class="cdx-block ce-header">{text}</h{self.level}>'
 
 
 @block("paragraph")
 class ParagraphBlock(EditorJsBlock):
     @property
-    def text(self) -> t.Optional[str]:
+    def text(self) -> str:
         """
         The text content of the paragraph.
         """
 
-        return self.data.get("text", None)
+        return self.data.get("text", "")
 
     def html(self, sanitize: bool = False) -> str:
         return rf'<p class="cdx-block ce-paragraph">{_sanitize(self.text) if sanitize else self.text}</p>'
@@ -170,20 +173,20 @@ class DelimiterBlock(EditorJsBlock):
 @block("image")
 class ImageBlock(EditorJsBlock):
     @property
-    def file_url(self) -> t.Optional[str]:
+    def file_url(self) -> str:
         """
         URL of the image file.
         """
 
-        return self.data.get("file", {}).get("url", None)
+        return self.data.get("file", {}).get("url", "")
 
     @property
-    def caption(self) -> t.Optional[str]:
+    def caption(self) -> str:
         """
         The image's caption.
         """
 
-        return self.data.get("caption", None)
+        return self.data.get("caption", "")
 
     @property
     def with_border(self) -> bool:

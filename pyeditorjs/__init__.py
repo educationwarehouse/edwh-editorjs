@@ -1,5 +1,9 @@
 from pathlib import Path
 
+from .blocks import BLOCKS_MAP, EditorJsBlock, block
+from .exceptions import EditorJsParseError
+from .parser import EditorJsParser
+
 __all__ = [
     "EditorJsParser",
     "EditorJsParseError",
@@ -19,10 +23,6 @@ except Exception:
 
 __doc__ = __readme__
 
-
-from .blocks import *
-from .exceptions import EditorJsParseError
-from .parser import EditorJsParser
 
 if __name__ == "__main__":
     _ = [EditorJsParser]
