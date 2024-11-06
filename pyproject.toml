@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "edwh-editorjs"
 dynamic = ["version"]
 
-description = "pyEditorJS"
+description = "EditorJS.py"
 readme = "README.md"
 authors = [
     { name = "SKevo", email = "skevo.cw@gmail.com" },
@@ -26,7 +26,9 @@ classifiers = [
 requires-python = ">=3.10"
 
 dependencies = [
-    "bleach"
+    # "bleach",
+    "mdast",
+    "markdown2",
 ]
 
 [project.optional-dependencies]
@@ -42,23 +44,23 @@ Homepage = "https://github.com/educationwarehouse/edwh-EditorJS"
 
 [tool.semantic_release]
 branch = "master"
-version_variable = "pyeditorjs/__about__.py:__version__"
+version_variable = "editorjs/__about__.py:__version__"
 change_log = "CHANGELOG.md"
 upload_to_repository = false
 upload_to_release = false
 build_command = "hatch build"
 
 [tool.hatch.version]
-path = "pyeditorjs/__about__.py"
+path = "editorjs/__about__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["pyeditorjs"]
+packages = ["editorjs"]
 
 
 [tool.setuptools.packages.find]
-include = ["pyeditorjs"]
+include = ["editorjs"]
 exclude = ["tests"]
 
 [tool.su6]
-directory = "pyeditorjs"
+directory = "editorjs"
 stop-after-first-failure = true
