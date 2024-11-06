@@ -56,7 +56,7 @@ def process_styled_content(item: MDChildNode, strict: bool = True) -> str:
         "strongEmphasis": "<b><i>{value}</i></b>",
         "link": '<a href="{url}">{value}</a>',
         "inlineCode": '<code class="inline-code">{value}</code>',
-        # todo: <mark>
+        # todo: <mark>, linktool
     }
 
     if _type in BLOCKS:
@@ -140,6 +140,17 @@ class ParagraphBlock(EditorJSBlock):
 
         for child in node.get("children"):
             _type = child.get("type")
+
+            if _type == "html" and child.get("value", "").startswith("<editorjs"):
+                # special type, e.g. <editorjs type="linkTool" href=...>...</editorjs>
+                # todo:
+                #  if element is like <editorjs/> only grab this one
+                #  otherwise, look for </editorjs>
+                #  then continue with the paragraph
+
+                raise TODO(f"Parse {node}")
+                return []
+
             if _type == "image":
                 if current_text:
                     result.append({"data": {"text": current_text}, "type": "paragraph"})
@@ -380,3 +391,23 @@ class QuoteBlock(EditorJSBlock):
     @classmethod
     def to_text(cls, node: MDChildNode) -> str:
         return default_to_text(node)
+
+
+@block("linkTool")
+class LinkBlock(EditorJSBlock):
+    @classmethod
+    def to_markdown(cls, data: EditorChildData) -> str:
+        link = data.get("link", "")
+        meta = data.get("meta", {})
+        title = meta.get("title", "")
+        description = meta.get("description", "")
+        image = meta.get("image", {}).get("url", "")
+        return f"""<editorjs type="linkTool" href="{link}" title="{title}" image="{image}">{description}</editorjs>"""
+
+    @classmethod
+    def to_json(cls, node: MDChildNode) -> list[dict]:
+        raise TODO(node)
+
+    @classmethod
+    def to_text(cls, node: MDChildNode) -> str:
+        return ""

@@ -18,7 +18,9 @@ class EditorJS:
     # internal representation is mdast, because we can convert to other types
     _mdast: MDRootNode
 
-    def __init__(self, _mdast: str | dict, extras: list = ("task_list", "fenced-code-blocks")):
+    def __init__(
+        self, _mdast: str | dict, extras: list = ("task_list", "fenced-code-blocks")
+    ):
         if not isinstance(_mdast, str | dict):
             raise TypeError("Only `str` or `dict` is supported!")
 

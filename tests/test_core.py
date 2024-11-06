@@ -72,3 +72,10 @@ def test_json():
 #     assert e == EditorJS.from_mdast(e.to_mdast())
 #     assert e == EditorJS.from_json(e.to_json())
 #     assert e == EditorJS.from_markdown(e.to_markdown())
+
+LINKTOOL_JSON = r"""{"time":1730911265307,"blocks":[{"id":"A07WMZn2iv","type":"linkTool","data":{"link":"https://fb.me","meta":{"title":"","description":"Meld je aan bij Facebook om te delen en contact te maken met je vrienden, familie en mensen die je kent.","image":{"url":"https://www.facebook.com/images/fb_icon_325x325.png"}}}}],"version":"2.30.6"}"""
+
+def test_linktool():
+    e = EditorJS.from_json(LINKTOOL_JSON)
+    print(e.to_html())
+    print(e.to_json())
