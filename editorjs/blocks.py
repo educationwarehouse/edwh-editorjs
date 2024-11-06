@@ -171,7 +171,7 @@ class ListBlock(EditorJSBlock):
             markdown_items = []
             for index, item in enumerate(subitems):
                 prefix = f"{index + 1}." if style == "ordered" else "-"
-                line = f"{'  ' * depth}{prefix} {item['content']}"
+                line = f"{'\t' * depth}{prefix} {item['content']}"
                 markdown_items.append(line)
 
                 # Recurse if there are nested items

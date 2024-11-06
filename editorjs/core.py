@@ -1,4 +1,5 @@
 import json
+import textwrap
 import typing as t
 
 import markdown2
@@ -16,15 +17,16 @@ EDITORJS_VERSION = "2.30.6"
 class EditorJS:
     # internal representation is mdast, because we can convert to other types
     _mdast: MDRootNode
-    _md = markdown2.Markdown(extras=["task_list"])  # todo: striketrough, table, ...
 
-    def __init__(self, _mdast: str | dict):
+    def __init__(self, _mdast: str | dict, extras: list = ("task_list", "fenced-code-blocks")):
         if not isinstance(_mdast, str | dict):
             raise TypeError("Only `str` or `dict` is supported!")
 
         self._mdast = t.cast(
             MDRootNode, json.loads(_mdast) if isinstance(_mdast, str) else _mdast
         )
+
+        self._md = markdown2.Markdown(extras=extras)  # todo: striketrough, table, ?
 
     @classmethod
     def from_json(cls, data: str | dict) -> Self:
@@ -48,6 +50,7 @@ class EditorJS:
         """
         Load from markdown string
         """
+
         return cls(mdast.md_to_json(data))
 
     @classmethod
@@ -78,7 +81,11 @@ class EditorJS:
         """
         Export Markdown string
         """
-        return mdast.json_to_md(self.to_mdast())
+        md = mdast.json_to_md(self.to_mdast())
+        # idk why this happens:
+        md = md.replace(r"\[ ]", "[ ]")
+        md = md.replace(r"\[x]", "[x]")
+        return md
 
     def to_mdast(self) -> str:
         """

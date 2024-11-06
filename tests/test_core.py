@@ -16,8 +16,8 @@ EXAMPLE_MD = textwrap.dedent("""
 
     1. another
     2. list (ordered)
-        2.1. with 
-        2.2. nesting
+        1. with 
+        2. nesting
     3. *and styling*
 
     ***
