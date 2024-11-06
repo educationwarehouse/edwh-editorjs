@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.0.0-beta.2 (2024-11-06)
+
+### Feature
+
+* Work in progress to do a rebuild based on mdast ([`28c12f1`](https://github.com/educationwarehouse/edwh-editorjs/commit/28c12f1f74c71a995f9f8097f1b26be45f835ad4))
+
 ## v2.0.0-beta.1 (2024-11-06)
 
 
