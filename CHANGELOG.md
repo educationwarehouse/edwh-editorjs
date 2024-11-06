@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.0.0-beta.3 (2024-11-06)
+
+### Fix
+
+* Various fixes with nested lists ([`52a7773`](https://github.com/educationwarehouse/edwh-editorjs/commit/52a7773470dce3eee6a2d17d46b594551ed043a5))
+
 ## v2.0.0-beta.2 (2024-11-06)
 
 ### Feature
