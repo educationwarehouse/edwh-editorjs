@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.0.0-beta.4 (2024-11-07)
+
+### Feature
+
+* Support (basic) tables, custom editorjs blocks like linkTool via <editorjs> ([`a6dfadf`](https://github.com/educationwarehouse/edwh-editorjs/commit/a6dfadf21ec008fe714704a056b9ffec751d731c))
+
 ## v2.0.0-beta.3 (2024-11-06)
 
 ### Fix
