@@ -5,6 +5,7 @@ mdast to editorjs
 import abc
 import re
 import typing as t
+from html.parser import HTMLParser
 
 from .exceptions import TODO
 from .types import EditorChildData, MDChildNode
@@ -138,27 +139,52 @@ class ParagraphBlock(EditorJSBlock):
         result = []
         current_text = ""
 
-        for child in node.get("children"):
+        skip = 0
+        nodes = node.get("children", [])
+
+        for idx, child in enumerate(nodes):
+            if skip:
+                skip -= 1
+                continue
+
             _type = child.get("type")
 
+            # deal with custom types
             if _type == "html" and child.get("value", "").startswith("<editorjs"):
                 # special type, e.g. <editorjs type="linkTool" href=...>...</editorjs>
-                # todo:
-                #  if element is like <editorjs/> only grab this one
-                #  otherwise, look for </editorjs>
-                #  then continue with the paragraph
 
-                raise TODO(f"Parse {node}")
-                return []
+                if child.get("value", "").endswith("/>"):
+                    # self-closing
+                    result.append(EditorJSCustom.to_json(node))
+                    continue
+                else:
+                    # <editorjs>something</editorjs> = 3 children
+                    result.extend(
+                        EditorJSCustom.to_json({"children": nodes[idx : idx + 2]})
+                    )
 
-            if _type == "image":
+                    skip = 2
+                    continue
+
+            elif _type == "image":
                 if current_text:
                     result.append({"data": {"text": current_text}, "type": "paragraph"})
                     current_text = ""
 
                 result.extend(ImageBlock.to_json(child))
             else:
-                current_text += cls.to_text(child)
+                child_text = cls.to_text(child)
+                _child_text = child_text.strip()
+                if _child_text.startswith("|") and _child_text.endswith("|"):
+                    # note: this just supports text-only tables.
+                    # tables with more complex elements break into multiple children.
+                    # and mdast DOES support converting into a Table/TableCell structure
+                    # via the GFM exttension
+                    # but their default mdast->md converter does NOT implement these functionalities.
+                    result.extend(TableBlock.to_json(child))
+                    continue
+
+                current_text += child_text
 
         # final text after image:
         if current_text:
@@ -393,6 +419,71 @@ class QuoteBlock(EditorJSBlock):
         return default_to_text(node)
 
 
+@block("table")
+class TableBlock(EditorJSBlock):
+
+    @classmethod
+    def to_markdown(cls, data: EditorChildData) -> str:
+        """
+        | Script | Interpreter | User | System |   |
+        |--------|-------------|------|--------|---|
+        |        |             |      |        |   |
+        |        |             |      |        |   |
+        |        |             |      |        |   |
+        """
+
+        table = ""
+        rows = data.get("content", [])
+
+        # Add an empty header row if no headings are provided
+        if not data.get("withHeadings", False) and rows:
+            table += "| " + " | ".join([""] * len(rows[0])) + " |\n"
+            table += "|" + " - |" * len(rows[0]) + "\n"
+
+        # Populate rows
+        for idx, tr in enumerate(rows):
+            table += "| " + " | ".join(tr) + " |\n"
+
+            # Add separator if headings are enabled and it's the first row
+            if not idx and data.get("withHeadings", False):
+                table += "|" + " - |" * len(tr) + "\n"
+
+        return f"\n{table}\n"
+
+    @classmethod
+    def to_json(cls, node: MDChildNode) -> list[dict]:
+        # content":[["Yeah","Okay"],["<i>1</i>","<code class=\"inline-code\">2</code>"]]}}]
+        table = []
+        with_headings = False
+
+        # first row is headings or empty. If not empty, withHeadings is True
+        # second row must be ignored
+        for idx, row in enumerate(node.get("value", "").strip().split("\n")):
+            tr = [_.strip() for _ in row.split("|")[1:-1]]
+            if not idx:
+                # first
+                if any(tr):
+                    with_headings = True
+                    table.append(tr)
+
+            elif idx == 1:
+                continue
+            else:
+                table.append(tr)
+
+        return [
+            {
+                "type": "table",
+                "content": table,
+                "withHeadings": with_headings,
+            }
+        ]
+
+    @classmethod
+    def to_text(cls, node: MDChildNode) -> str:
+        raise TODO(node)
+
+
 @block("linkTool")
 class LinkBlock(EditorJSBlock):
     @classmethod
@@ -406,8 +497,69 @@ class LinkBlock(EditorJSBlock):
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
-        raise TODO(node)
+        return [
+            {
+                "type": "linkTool",
+                "data": {
+                    "link": node.get("href", ""),
+                    "meta": {
+                        "title": node.get("title", ""),
+                        "description": node.get("body", ""),
+                        "image": {
+                            "url": node.get("image", ""),
+                        },
+                    },
+                },
+            }
+        ]
 
     @classmethod
     def to_text(cls, node: MDChildNode) -> str:
         return ""
+
+
+class AttributeParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.attributes = {}
+        self.data = None
+
+    def handle_starttag(self, tag, attrs):
+        # Collect attributes when the tag is encountered
+        self.attributes = dict(attrs)
+
+    def handle_data(self, data):
+        self.data = data
+
+
+class EditorJSCustom(EditorJSBlock):
+    """
+    Special type of block to deal with custom attributes
+    """
+
+    @classmethod
+    def parse_html(cls, html: str):
+        parser = AttributeParser()
+        parser.feed(html)
+
+        return parser.attributes, parser.data
+
+    @classmethod
+    def to_markdown(cls, data: EditorChildData) -> str:
+        raise TODO()
+
+    @classmethod
+    def to_json(cls, node: MDChildNode) -> list[dict]:
+        html = "".join(_["value"] for _ in node.get("children", []))
+        attrs, body = cls.parse_html(html)
+        _type = attrs.get("type", "")
+        attrs.setdefault("body", body)  # only if there is no such attribute yet
+
+        if not (handler := BLOCKS.get(_type)):
+            raise ValueError(f"Unknown custom type {_type}")
+
+        return handler.to_json(attrs)
+
+    @classmethod
+    def to_text(cls, node: MDChildNode) -> str:
+        raise TODO()

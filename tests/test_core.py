@@ -45,6 +45,7 @@ EXAMPLE_MD = textwrap.dedent("""
 
 EXAMPLE_JSON = r"""{"time":1730905327104,"blocks":[{"id":"1pY2hYfB1A","type":"header","data":{"text":"Heading","level":1}},{"id":"akvQa8k7ne","type":"paragraph","data":{"text":"Paragraph with special content yeah such as <a href=\"https://g.co\">links</a>!"}},{"id":"mtXTKYuP8k","type":"list","data":{"style":"unordered","items":[{"content":"list (unordered)","items":[]},{"content":"with","items":[{"content":"<i>nested</i> lvl 1.0","items":[]},{"content":"<b>nested</b> lvl 1.1","items":[{"content":"nested lvl 2.0","items":[]}]}]},{"content":"<a href=\"https://g.co\">items</a>","items":[]}]}},{"id":"CwdqcNPGp2","type":"list","data":{"style":"ordered","items":[{"content":"another","items":[]},{"content":"list (ordered)\n2.1. with\n2.2. nesting","items":[]},{"content":"<i>and styling</i>","items":[]}]}},{"id":"4aavopqblu","type":"delimiter","data":{}},{"id":"GgTUixlCYO","type":"paragraph","data":{"text":"Checkbox:"}},{"id":"E12TkYu5E_","type":"checklist","data":{"items":[{"text":"unchecked","checked":false},{"text":"<i>unchecked</i>","checked":false},{"text":"checked","checked":true},{"text":"<i>checked</i>","checked":true}]}},{"id":"I-HNbkhXE-","type":"paragraph","data":{"text":"Inline <code class=\"inline-code\">code</code>"}},{"id":"fNKmTrZvXn","type":"code","data":{"code":"def real_code(example: str): \n    pass"}},{"id":"bfHSwu6hjy","type":"paragraph","data":{"text":"Image: "}},{"id":"gClWIHSnxn","type":"image","data":{"caption":"Caption","withBorder":false,"withBackground":false,"stretched":false,"file":{"url":"https://py4web.leiden.dockers.local/img/upload/16.txt?hash=3f4b66f9be3306fa7f42c0bcf6238d1101d9c75f"}}},{"id":"NZ_ruz2mXL","type":"paragraph","data":{"text":"; post image"}},{"id":"Nn7p_3Whpy","type":"quote","data":{"text":"The secret to creativity is knowing how to hide your sources.<br>\nRegel 2<br>\n","caption":"Albert Einstein","alignment":"left"}}],"version":"2.30.6"}"""
 
+
 def test_md():
     e = EditorJS.from_markdown(EXAMPLE_MD)
 
@@ -62,6 +63,7 @@ def test_json():
     print(e.to_markdown())
     print(e.to_html())
 
+
 # def test_lossless():
 #     e = EditorJS.from_markdown(EXAMPLE_MD)
 #     assert e == EditorJS.from_mdast(e.to_mdast())
@@ -75,7 +77,25 @@ def test_json():
 
 LINKTOOL_JSON = r"""{"time":1730911265307,"blocks":[{"id":"A07WMZn2iv","type":"linkTool","data":{"link":"https://fb.me","meta":{"title":"","description":"Meld je aan bij Facebook om te delen en contact te maken met je vrienden, familie en mensen die je kent.","image":{"url":"https://www.facebook.com/images/fb_icon_325x325.png"}}}}],"version":"2.30.6"}"""
 
+
 def test_linktool():
     e = EditorJS.from_json(LINKTOOL_JSON)
     print(e.to_html())
     print(e.to_json())
+    print(e.to_markdown())
+    print(e.to_html())
+
+
+TABLE1_JSON = r"""{"time":1730984047714,"blocks":[{"id":"SNXL5vru_a","type":"table","data":{"withHeadings":false,"stretched":false,"content":[["1.1","2.1"],["1.2","2.2"]]}},{"id":"q0IC_sL8P5","type":"paragraph","data":{"text":"<mark class=\"cdx-marker\">marked</mark>"}}],"version":"2.30.6"}"""
+TABLE2_JSON = r"""{"time":1730984305796,"blocks":[{"id":"vBf5hT3jeR","type":"linkTool","data":{"link":"https://fb.me","meta":{"title":"","description":"Meld je aan bij Facebook om te delen en contact te maken met je vrienden, familie en mensen die je kent.","image":{"url":"https://www.facebook.com/images/fb_icon_325x325.png"}}}},{"id":"7bP-0bw1OT","type":"table","data":{"withHeadings":true,"stretched":false,"content":[["Yeah","Okay"],["<i>1</i>","<code class=\"inline-code\">2</code>"]]}}],"version":"2.30.6"}"""
+
+def test_table():
+    # e = EditorJS.from_json(TABLE1_JSON)
+    # print(e.to_markdown())
+    # print(e.to_json())
+    # print(e.to_html())
+
+    e = EditorJS.from_json(TABLE2_JSON)
+    print(e.to_markdown())
+    print(e.to_json())
+    print(e.to_html())

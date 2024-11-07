@@ -19,7 +19,9 @@ class EditorJS:
     _mdast: MDRootNode
 
     def __init__(
-        self, _mdast: str | dict, extras: list = ("task_list", "fenced-code-blocks")
+        self,
+        _mdast: str | dict,
+        extras: list = ("task_list", "fenced-code-blocks", "tables"),
     ):
         if not isinstance(_mdast, str | dict):
             raise TypeError("Only `str` or `dict` is supported!")
@@ -28,7 +30,7 @@ class EditorJS:
             MDRootNode, json.loads(_mdast) if isinstance(_mdast, str) else _mdast
         )
 
-        self._md = markdown2.Markdown(extras=extras)  # todo: striketrough, table, ?
+        self._md = markdown2.Markdown(extras=extras)  # todo: striketrough, ?
 
     @classmethod
     def from_json(cls, data: str | dict) -> Self:
@@ -100,6 +102,7 @@ class EditorJS:
         Export HTML string
         """
         md = self.to_markdown()
+        # todo: deal with custom elements like linktool
         return self._md.convert(md)
 
     def __repr__(self):
