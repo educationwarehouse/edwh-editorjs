@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.0.0-beta.5 (2024-11-07)
+
+### Feature
+
+* Add markdown2 extra to deal with custom `<editorjs />` blocks ([`31d8647`](https://github.com/educationwarehouse/edwh-editorjs/commit/31d8647b7275e245dabf27a99c43d400217705be))
+
 ## v2.0.0-beta.4 (2024-11-07)
 
 ### Feature
