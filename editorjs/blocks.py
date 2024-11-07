@@ -6,6 +6,9 @@ import abc
 import re
 import typing as t
 from html.parser import HTMLParser
+from urllib.parse import urlparse
+
+import markdown2
 
 from .exceptions import TODO
 from .types import EditorChildData, MDChildNode
@@ -217,7 +220,7 @@ class ListBlock(EditorJSBlock):
 
             return "\n".join(markdown_items)
 
-        return "\n" + parse_items(items) + "\n"
+        return "\n" + parse_items(items) + "\n\n"
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
@@ -311,7 +314,7 @@ class ChecklistBlock(ListBlock):
             char = "x" if item.get("checked", False) else " "
             markdown_items.append(f"- [{char}] {text}")
 
-        return "\n" + "\n".join(markdown_items) + "\n"
+        return "\n" + "\n".join(markdown_items) + "\n\n"
 
 
 @block("thematicBreak", "delimiter")
@@ -419,6 +422,22 @@ class QuoteBlock(EditorJSBlock):
         return default_to_text(node)
 
 
+@block("raw")
+class RawBlock(EditorJSBlock):
+
+    @classmethod
+    def to_markdown(cls, data: EditorChildData) -> str:
+        return data.get("html", "")
+
+    @classmethod
+    def to_json(cls, node: MDChildNode) -> list[dict]:
+        raise TODO(node)
+
+    @classmethod
+    def to_text(cls, node: MDChildNode) -> str:
+        raise TODO(node)
+
+
 @block("table")
 class TableBlock(EditorJSBlock):
 
@@ -515,7 +534,66 @@ class LinkBlock(EditorJSBlock):
 
     @classmethod
     def to_text(cls, node: MDChildNode) -> str:
-        return ""
+        url = node.get("href", "")
+        image = node.get("image", "")
+        title = node.get("title", "")
+        body = node.get("body", "")
+        domain = urlparse(url).netloc
+
+        return f"""
+        <div class="link-tool">
+            <a class="link-tool__content link-tool__content--rendered" target="_blank"
+               rel="nofollow noindex noreferrer" href="{url}">
+                <div class="link-tool__image"
+                     style="background-image: url(&quot;{image}&quot;);"></div>
+                <div class="link-tool__title">{title}</div>
+                <p class="link-tool__description">{body}</p>
+                <span class="link-tool__anchor">{domain}</span>
+            </a>
+        </div>
+        """
+
+
+@block("attaches")
+class AttachmentBlock(EditorJSBlock):
+
+    @classmethod
+    def to_markdown(cls, data: EditorChildData) -> str:
+        file = data.get("file", {}).get("url", "")
+        title = data.get("title", "")
+        return f"""<editorjs type="attaches" file="{file}">{title}</editorjs>"""
+
+    @classmethod
+    def to_json(cls, node: MDChildNode) -> list[dict]:
+        return [
+            {
+                "type": "attaches",
+                "data": {
+                    "file": {"url": node.get("file", "")},
+                    "title": node.get("body", ""),
+                },
+            }
+        ]
+
+    @classmethod
+    def to_text(cls, node: MDChildNode) -> str:
+        return f"""
+        <div class="cdx-attaches cdx-attaches--with-file">
+            <div class="cdx-attaches__file-icon">
+                <div class="cdx-attaches__file-icon-background">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.3236 8.43554L9.49533 12.1908C9.13119 12.5505 8.93118 13.043 8.9393 13.5598C8.94741 14.0767 9.163 14.5757 9.53862 14.947C9.91424 15.3182 10.4191 15.5314 10.9422 15.5397C11.4653 15.5479 11.9637 15.3504 12.3279 14.9908L16.1562 11.2355C16.8845 10.5161 17.2845 9.53123 17.2682 8.4975C17.252 7.46376 16.8208 6.46583 16.0696 5.72324C15.3184 4.98066 14.3086 4.55425 13.2624 4.53782C12.2162 4.52138 11.2193 4.91627 10.4911 5.63562L6.66277 9.39093C5.57035 10.4699 4.97032 11.9473 4.99467 13.4979C5.01903 15.0485 5.66578 16.5454 6.79264 17.6592C7.9195 18.7731 9.43417 19.4127 11.0034 19.4374C12.5727 19.462 14.068 18.8697 15.1604 17.7907L18.9887 14.0354"></path></svg>
+                </div>
+            </div>
+            <div class="cdx-attaches__file-info">
+                <div class="cdx-attaches__title" contenteditable="true" data-placeholder="File title" data-empty="false">
+                {node.get("body", "")}
+                </div>
+            </div>
+            <a class="cdx-attaches__download-button" href="{node.get('file', '')}" target="_blank" rel="nofollow noindex noreferrer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M7 10L11.8586 14.8586C11.9367 14.9367 12.0633 14.9367 12.1414 14.8586L17 10"></path></svg>
+            </a>
+        </div>
+        """
 
 
 class AttributeParser(HTMLParser):
@@ -532,10 +610,13 @@ class AttributeParser(HTMLParser):
         self.data = data
 
 
-class EditorJSCustom(EditorJSBlock):
+class EditorJSCustom(EditorJSBlock, markdown2.Extra):
     """
     Special type of block to deal with custom attributes
     """
+
+    name = "editorjs"
+    order = (), (markdown2.Stage.POSTPROCESS,)
 
     @classmethod
     def parse_html(cls, html: str):
@@ -563,3 +644,27 @@ class EditorJSCustom(EditorJSBlock):
     @classmethod
     def to_text(cls, node: MDChildNode) -> str:
         raise TODO()
+
+    # markdown2:
+    re_short = re.compile(r"<editorjs.*?/>")
+    re_long = re.compile(r"<editorjs.*?>.*?</editorjs>")
+
+    def run(self, text: str) -> str:
+        def replace_html(match):
+            attrs, body = self.parse_html(match.group())
+            _type = attrs.get("type", "")
+            attrs.setdefault("body", body)  # only if there is no such attribute yet
+
+            if not (handler := BLOCKS.get(_type)):
+                raise ValueError(f"Unknown custom type {_type}")
+
+            return handler.to_text(attrs)
+
+        # Substitute using the replacement functions
+        text = self.re_long.sub(replace_html, text)
+        text = self.re_short.sub(replace_html, text)
+
+        return text
+
+
+EditorJSCustom.register()

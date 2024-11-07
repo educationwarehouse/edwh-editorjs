@@ -1,5 +1,4 @@
 import json
-import textwrap
 import typing as t
 
 import markdown2
@@ -7,7 +6,6 @@ import mdast
 from typing_extensions import Self
 
 from .blocks import BLOCKS
-from .exceptions import TODO
 from .helpers import unix_timestamp
 from .types import MDRootNode
 
@@ -21,7 +19,7 @@ class EditorJS:
     def __init__(
         self,
         _mdast: str | dict,
-        extras: list = ("task_list", "fenced-code-blocks", "tables"),
+        extras: list = ("task_list", "fenced-code-blocks", "tables", "editorjs"),
     ):
         if not isinstance(_mdast, str | dict):
             raise TypeError("Only `str` or `dict` is supported!")
@@ -102,7 +100,7 @@ class EditorJS:
         Export HTML string
         """
         md = self.to_markdown()
-        # todo: deal with custom elements like linktool
+        # todo: deal with custom elements like linktool, attaches
         return self._md.convert(md)
 
     def __repr__(self):
