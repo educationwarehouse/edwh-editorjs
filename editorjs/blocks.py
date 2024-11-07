@@ -585,7 +585,7 @@ class AttachmentBlock(EditorJSBlock):
                 </div>
             </div>
             <div class="cdx-attaches__file-info">
-                <div class="cdx-attaches__title" contenteditable="true" data-placeholder="File title" data-empty="false">
+                <div class="cdx-attaches__title" data-placeholder="File title" data-empty="false">
                 {node.get("body", "")}
                 </div>
             </div>
