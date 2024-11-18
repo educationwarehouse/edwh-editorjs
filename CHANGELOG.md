@@ -4,36 +4,16 @@
 
 ## v2.0.0 (2024-11-18)
 
-### Fix
+### Features
 
-* Rendered attachment should not be content-editable ([`58ab562`](https://github.com/educationwarehouse/edwh-editorjs/commit/58ab562daaca233455b3fe66b773af61f1abb0ad))
+* Rebuilt the editor logic based on MDAST for improved extensibility and maintainability ([`28c12f1`](https://github.com/educationwarehouse/edwh-editorjs/commit/28c12f1f74c71a995f9f8097f1b26be45f835ad4))
+* Added support for (basic) tables and custom Editor.js blocks, such as `linkTool` and `<editorjs>` ([`a6dfadf`](https://github.com/educationwarehouse/edwh-editorjs/commit/a6dfadf21ec008fe714704a056b9ffec751d731c))
+* Integrated `markdown2` extras to handle custom `<editorjs>` blocks ([`31d8647`](https://github.com/educationwarehouse/edwh-editorjs/commit/31d8647b7275e245dabf27a99c43d400217705be))
 
-## v2.0.0-beta.5 (2024-11-07)
+### Fixes
 
-### Feature
-
-* Add markdown2 extra to deal with custom `<editorjs />` blocks ([`31d8647`](https://github.com/educationwarehouse/edwh-editorjs/commit/31d8647b7275e245dabf27a99c43d400217705be))
-
-## v2.0.0-beta.4 (2024-11-07)
-
-### Feature
-
-* Support (basic) tables, custom editorjs blocks like linkTool via <editorjs> ([`a6dfadf`](https://github.com/educationwarehouse/edwh-editorjs/commit/a6dfadf21ec008fe714704a056b9ffec751d731c))
-
-## v2.0.0-beta.3 (2024-11-06)
-
-### Fix
-
-* Various fixes with nested lists ([`52a7773`](https://github.com/educationwarehouse/edwh-editorjs/commit/52a7773470dce3eee6a2d17d46b594551ed043a5))
-
-## v2.0.0-beta.2 (2024-11-06)
-
-### Feature
-
-* Work in progress to do a rebuild based on mdast ([`28c12f1`](https://github.com/educationwarehouse/edwh-editorjs/commit/28c12f1f74c71a995f9f8097f1b26be45f835ad4))
-
-## v2.0.0-beta.1 (2024-11-06)
-
+* Corrected behavior for nested lists ([`52a7773`](https://github.com/educationwarehouse/edwh-editorjs/commit/52a7773470dce3eee6a2d17d46b594551ed043a5))
+* Resolved an issue where rendered attachments were incorrectly marked as content-editable ([`58ab562`](https://github.com/educationwarehouse/edwh-editorjs/commit/58ab562daaca233455b3fe66b773af61f1abb0ad))
 
 
 ## v1.1.0 (2024-10-31)
