@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.0.0 (2024-11-18)
+
+### Fix
+
+* Rendered attachment should not be content-editable ([`58ab562`](https://github.com/educationwarehouse/edwh-editorjs/commit/58ab562daaca233455b3fe66b773af61f1abb0ad))
+
 ## v2.0.0-beta.5 (2024-11-07)
 
 ### Feature
