@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.0.2 (2024-11-26)
+
+### Fix
+
+* Raw block pt2 ([`37ee6bc`](https://github.com/educationwarehouse/edwh-editorjs/commit/37ee6bc09dd8f54ca22f2652be1c5920d74779d1))
+
 ## v2.0.1 (2024-11-26)
 
 ### Fix
