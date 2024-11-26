@@ -156,6 +156,22 @@ def test_raw_html():
     print(e.to_markdown())
     assert "     " not in e.to_markdown(), "added too many whitespaces"
 
+    another_md = r"""<marquee> <kaas>mannetje </kaas> </marquee> <yep>pa
+
+</yep>
+
+sdafasdgasdgdsag
+
+asdfsadfsdf dsfasdf
+
+asdfsdajgdsjaklgkjds
+"""
+
+    e = EditorJS.from_markdown(another_md)
+    print(e.to_markdown())
+    print(e.to_json())
+    assert e.to_json()
+
 
 def test_code():
     e = EditorJS.from_markdown(textwrap.dedent("""

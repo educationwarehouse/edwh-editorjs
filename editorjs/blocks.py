@@ -470,7 +470,7 @@ class QuoteBlock(EditorJSBlock):
         return default_to_text(node)
 
 
-@block("raw")
+@block("raw", "html")
 class RawBlock(EditorJSBlock):
 
     @classmethod
@@ -480,11 +480,11 @@ class RawBlock(EditorJSBlock):
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
-        raise TODO(node)
+        return [raw_block(cls.to_text(node))]
 
     @classmethod
     def to_text(cls, node: MDChildNode) -> str:
-        raise TODO(node)
+        return node.get("value", "")
 
 
 @block("table")

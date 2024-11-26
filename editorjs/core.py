@@ -41,7 +41,7 @@ class EditorJS:
         for child in blocks:
             _type = child["type"]
             if not (block := BLOCKS.get(_type)):
-                raise TypeError(f"Unsupported block type `{_type}`")
+                raise TypeError(f"from_json: Unsupported block type `{_type}`")
 
             data = child.get("data", {})
             # forward any 'tunes' via data:
@@ -76,7 +76,7 @@ class EditorJS:
         for child in self._mdast["children"]:
             _type = child["type"]
             if not (block := BLOCKS.get(_type)):
-                raise TypeError(f"Unsupported block type `{_type}`")
+                raise TypeError(f"to_json: Unsupported block type `{_type}`")
 
             blocks.extend(block.to_json(child))
 
