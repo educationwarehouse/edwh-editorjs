@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.2.2 (2024-11-26)
+
+### Fix
+
+* Support 'html' as alias for 'raw' block ([`4627f90`](https://github.com/educationwarehouse/edwh-editorjs/commit/4627f900a30bf6d6b202790958a78d4ef745ee11))
+
 ## v2.2.1 (2024-11-26)
 
 ### Fix
