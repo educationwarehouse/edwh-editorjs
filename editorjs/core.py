@@ -92,7 +92,9 @@ class EditorJS:
         # idk why this happens:
         md = md.replace(r"\[ ]", "[ ]")
         md = md.replace(r"\[x]", "[x]")
-        return md
+        return md.replace(
+            "  <", " <"
+        )  # replace double space (added by mdast) with single one
 
     def to_mdast(self) -> str:
         """

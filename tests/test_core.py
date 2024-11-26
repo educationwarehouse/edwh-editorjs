@@ -135,11 +135,26 @@ def test_raw_html():
     e = EditorJS.from_json(raw_html_json)
     blocks = json.loads(e.to_json())
 
-    print(blocks)
-
     assert blocks["blocks"][0]["type"] == "paragraph", blocks["blocks"][0]["type"]
     assert blocks["blocks"][1]["type"] == "raw", blocks["blocks"][1]["type"]
     assert blocks["blocks"][2]["type"] == "paragraph", blocks["blocks"][2]["type"]
+
+    raw_html_json = r"""[{"id":"xGbqrb40Uz","type":"raw","data":{"html":"<marquee><kaas>mannetje</kaas></marquee>"}}]"""
+
+    e = EditorJS.from_json(raw_html_json)
+
+    print(e.to_mdast(), e.to_markdown())
+    e = EditorJS.from_markdown(e.to_markdown())
+    print(e.to_mdast(), e.to_markdown())
+
+    e = EditorJS.from_markdown(e.to_markdown())
+    e = EditorJS.from_markdown(e.to_markdown())
+    e = EditorJS.from_markdown(e.to_markdown())
+    e = EditorJS.from_markdown(e.to_markdown())
+    e = EditorJS.from_markdown(e.to_markdown())
+
+    print(e.to_markdown())
+    assert "     " not in e.to_markdown(), "added too many whitespaces"
 
 
 def test_code():
