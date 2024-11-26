@@ -31,13 +31,14 @@ class EditorJS:
         self._md = markdown2.Markdown(extras=extras)  # todo: striketrough, ?
 
     @classmethod
-    def from_json(cls, data: str | dict) -> Self:
+    def from_json(cls, data: str | dict | list) -> Self:
         """
         Load from EditorJS JSON Blocks
         """
-        data = data if isinstance(data, dict) else json.loads(data)
+        data = data if isinstance(data, (dict, list)) else json.loads(data)
+        blocks = data["blocks"] if isinstance(data, dict) else data
         markdown_items = []
-        for child in data["blocks"]:
+        for child in blocks:
             _type = child["type"]
             if not (block := BLOCKS.get(_type)):
                 raise TypeError(f"Unsupported block type `{_type}`")

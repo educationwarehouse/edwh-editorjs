@@ -173,7 +173,7 @@ class ParagraphBlock(EditorJSBlock):
                 else:
                     # <editorjs>something</editorjs> = 3 children
                     result.extend(
-                        EditorJSCustom.to_json({"children": nodes[idx: idx + 2]})
+                        EditorJSCustom.to_json({"children": nodes[idx : idx + 2]})
                     )
 
                     skip = 2
@@ -182,7 +182,11 @@ class ParagraphBlock(EditorJSBlock):
             elif _type == "image":
                 if current_text:
                     # {"id":"zksvpxQTDD","type":"raw","data":{"html":"<marquee> raw </marquee>"}}
-                    result.append(raw_block(current_text) if any_html else paragraph_block(current_text))
+                    result.append(
+                        raw_block(current_text)
+                        if any_html
+                        else paragraph_block(current_text)
+                    )
                     current_text = ""
                     any_html = False  # reset
 
@@ -203,7 +207,9 @@ class ParagraphBlock(EditorJSBlock):
 
         # final text after image:
         if current_text:
-            result.append(raw_block(current_text) if any_html else paragraph_block(current_text))
+            result.append(
+                raw_block(current_text) if any_html else paragraph_block(current_text)
+            )
 
         return result
 
@@ -440,7 +446,7 @@ class RawBlock(EditorJSBlock):
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
         text = data.get("html", "")
-        return  f"{text}\n\n"
+        return f"{text}\n\n"
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
@@ -509,7 +515,7 @@ class TableBlock(EditorJSBlock):
                 "data": {
                     "content": table,
                     "withHeadings": with_headings,
-                }
+                },
             }
         ]
 

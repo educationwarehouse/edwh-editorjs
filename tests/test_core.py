@@ -142,7 +142,6 @@ def test_raw_html():
     assert blocks["blocks"][2]["type"] == "paragraph", blocks["blocks"][2]["type"]
 
 
-
 def test_code():
     e = EditorJS.from_markdown(textwrap.dedent("""
     Read code:
@@ -150,8 +149,33 @@ def test_code():
     ```
     <marquee> code </marquee>
     ```
+    
+    End of code
     """))
 
     blocks = json.loads(e.to_json())
 
+    assert blocks["blocks"][0]["type"] == "paragraph", blocks["blocks"][0]["type"]
     assert blocks["blocks"][1]["type"] == "code", blocks["blocks"][1]["type"]
+    assert blocks["blocks"][2]["type"] == "paragraph", blocks["blocks"][2]["type"]
+
+    # check if it's still the same after export and import:
+
+    e = EditorJS.from_json(blocks)
+
+    blocks = json.loads(e.to_json())
+
+    assert blocks["blocks"][0]["type"] == "paragraph", blocks["blocks"][0]["type"]
+    assert blocks["blocks"][1]["type"] == "code", blocks["blocks"][1]["type"]
+    assert blocks["blocks"][2]["type"] == "paragraph", blocks["blocks"][2]["type"]
+
+    # note: without `time` and `version` boilerplate:
+    blocks_json = r"""[{"id":"DD966BQf_t","type":"paragraph","data":{"text":"Pre"}},{"id":"sjr2JyuC1y","type":"code","data":{"code":"html"}},{"id":"aJN_wgBv7b","type":"paragraph","data":{"text":"Post"}}]"""
+
+    e = EditorJS.from_json(blocks_json)
+
+    blocks = json.loads(e.to_json())
+
+    assert blocks["blocks"][0]["type"] == "paragraph", blocks["blocks"][0]["type"]
+    assert blocks["blocks"][1]["type"] == "code", blocks["blocks"][1]["type"]
+    assert blocks["blocks"][2]["type"] == "paragraph", blocks["blocks"][2]["type"]
