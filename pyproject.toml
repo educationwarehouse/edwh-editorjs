@@ -12,7 +12,7 @@ authors = [
     { name = "SKevo", email = "skevo.cw@gmail.com" },
     { name = "Robin van der Noord", email = "robin.vdn@educationwarehouse.nl" },
 ]
-license = { text = "MIT" }
+license-expression = { text = "MIT" }
 keywords = ["editor.js", "parser", "clean", "bleach", "wysiwyg", "editor", "javascript", "html", "json"]
 classifiers = [
     "Development Status :: 4 - Beta",
