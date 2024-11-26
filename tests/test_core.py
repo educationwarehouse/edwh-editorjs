@@ -1,3 +1,4 @@
+import json
 import textwrap
 
 from editorjs import EditorJS
@@ -110,3 +111,15 @@ def test_attachment():
     print(e.to_markdown())
     print(e.to_json())
     print(e.to_html())
+
+
+def test_raw_html():
+    e = EditorJS.from_markdown(textwrap.dedent("""
+    # Raw  HTML
+    
+    <marquee>This ain't no paragraph</marquee>
+    """))
+
+    blocks = json.loads(e.to_json())
+
+    assert blocks["blocks"][1]["type"] == "raw", blocks["blocks"][1]["type"]

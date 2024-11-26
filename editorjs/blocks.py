@@ -144,6 +144,7 @@ class ParagraphBlock(EditorJSBlock):
 
         skip = 0
         nodes = node.get("children", [])
+        any_html = False
 
         for idx, child in enumerate(nodes):
             if skip:
@@ -151,6 +152,7 @@ class ParagraphBlock(EditorJSBlock):
                 continue
 
             _type = child.get("type")
+            any_html |= _type == "html"
 
             # deal with custom types
             if _type == "html" and child.get("value", "").startswith("<editorjs"):
@@ -163,7 +165,7 @@ class ParagraphBlock(EditorJSBlock):
                 else:
                     # <editorjs>something</editorjs> = 3 children
                     result.extend(
-                        EditorJSCustom.to_json({"children": nodes[idx : idx + 2]})
+                        EditorJSCustom.to_json({"children": nodes[idx: idx + 2]})
                     )
 
                     skip = 2
@@ -171,8 +173,9 @@ class ParagraphBlock(EditorJSBlock):
 
             elif _type == "image":
                 if current_text:
-                    result.append({"data": {"text": current_text}, "type": "paragraph"})
+                    result.append({"data": {"text": current_text}, "type": "raw" if any_html else "paragraph"})
                     current_text = ""
+                    any_html = False # reset
 
                 result.extend(ImageBlock.to_json(child))
             else:
@@ -191,7 +194,7 @@ class ParagraphBlock(EditorJSBlock):
 
         # final text after image:
         if current_text:
-            result.append({"data": {"text": current_text}, "type": "paragraph"})
+            result.append({"data": {"text": current_text}, "type": "raw" if any_html else "paragraph"})
 
         return result
 
@@ -493,8 +496,10 @@ class TableBlock(EditorJSBlock):
         return [
             {
                 "type": "table",
-                "content": table,
-                "withHeadings": with_headings,
+                "data": {
+                    "content": table,
+                    "withHeadings": with_headings,
+                }
             }
         ]
 
