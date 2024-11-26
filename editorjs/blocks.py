@@ -143,7 +143,7 @@ class ParagraphBlock(EditorJSBlock):
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
         text = data.get("text", "")
-        return f"{text}\n"
+        return f"{text}\n\n"
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
@@ -439,7 +439,8 @@ class RawBlock(EditorJSBlock):
 
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
-        return data.get("html", "")
+        text = data.get("html", "")
+        return  f"{text}\n\n"
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:

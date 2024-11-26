@@ -114,15 +114,34 @@ def test_attachment():
 
 
 def test_raw_html():
-    e = EditorJS.from_markdown(textwrap.dedent("""
-    # Raw  HTML
-    
-    <marquee>This ain't no paragraph</marquee>
-    """))
+    # e = EditorJS.from_markdown(textwrap.dedent("""
+    # # Raw  HTML
+    #
+    # <marquee>This ain't no paragraph</marquee>
+    #
+    # This is a paragraph
+    # """))
+    #
+    # blocks = json.loads(e.to_json())
+    #
+    # print(blocks)
+    #
+    # assert blocks["blocks"][1]["type"] == "raw", blocks["blocks"][1]["type"]
+    # assert blocks["blocks"][2]["type"] == "paragraph", blocks["blocks"][2]["type"]
+    #
 
+    raw_html_json = r"""{"time":1730989152705,"blocks":[{"id":"DGQwRibbof","type":"paragraph","data":{"text":"The Start"}},{"id":"NrvWoJ2bVI","type":"raw","data":{"html":" <marquee>    <kaas>mannetje    </kaas>    </marquee>Einde!"}},{"id":"DGQwRibbof","type":"paragraph","data":{"text":"The End!"}}],"version":"2.30.6"}"""
+
+    e = EditorJS.from_json(raw_html_json)
     blocks = json.loads(e.to_json())
 
+    print(blocks)
+
+    assert blocks["blocks"][0]["type"] == "paragraph", blocks["blocks"][0]["type"]
     assert blocks["blocks"][1]["type"] == "raw", blocks["blocks"][1]["type"]
+    assert blocks["blocks"][2]["type"] == "paragraph", blocks["blocks"][2]["type"]
+
+
 
 def test_code():
     e = EditorJS.from_markdown(textwrap.dedent("""
@@ -135,4 +154,4 @@ def test_code():
 
     blocks = json.loads(e.to_json())
 
-    print(blocks)
+    assert blocks["blocks"][1]["type"] == "code", blocks["blocks"][1]["type"]
