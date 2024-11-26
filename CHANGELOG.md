@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.2.1 (2024-11-26)
+
+### Fix
+
+* Quick fix to prevent unlimited spaces being added by mdast ([`a196a22`](https://github.com/educationwarehouse/edwh-editorjs/commit/a196a221b623f7d4808aec64ef455197bdcfacaf))
+
 ## v2.2.0 (2024-11-26)
 
 ### Feature
