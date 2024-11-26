@@ -43,7 +43,11 @@ class EditorJS:
             if not (block := BLOCKS.get(_type)):
                 raise TypeError(f"Unsupported block type `{_type}`")
 
-            markdown_items.append(block.to_markdown(child.get("data", {})))
+            data = child.get("data", {})
+            # forward any 'tunes' via data:
+            data["tunes"] = data.get("tunes") or child.get("tunes") or {}
+
+            markdown_items.append(block.to_markdown(data))
 
         markdown = "".join(markdown_items)
         return cls.from_markdown(markdown)

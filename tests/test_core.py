@@ -179,3 +179,19 @@ def test_code():
     assert blocks["blocks"][0]["type"] == "paragraph", blocks["blocks"][0]["type"]
     assert blocks["blocks"][1]["type"] == "code", blocks["blocks"][1]["type"]
     assert blocks["blocks"][2]["type"] == "paragraph", blocks["blocks"][2]["type"]
+
+
+def test_alignment():
+    json_blocks = r"""[{"id":"7pEj7OVRiI","type":"header","data":{"text":"Right","level":2},"tunes":{"alignmentTune":{"alignment":"right"}}},{"id":"BxL_tpq3AD","type":"paragraph","data":{"text":"right"},"tunes":{"alignmentTune":{"alignment":"right"}}},{"id":"KOh0mMtNQf","type":"header","data":{"text":"Center","level":2},"tunes":{"alignmentTune":{"alignment":"center"}}},{"id":"AegxKSR6Oa","type":"paragraph","data":{"text":"center"},"tunes":{"alignmentTune":{"alignment":"center"}}},{"id":"xJK82ujRe5","type":"header","data":{"text":"Left","level":3},"tunes":{"alignmentTune":{"alignment":"left"}}},{"id":"bwwQwKdZf0","type":"paragraph","data":{"text":"left"},"tunes":{"alignmentTune":{"alignment":"left"}}}]"""
+
+    e = EditorJS.from_json(json_blocks)
+
+    print(e.to_markdown())
+    print(e.to_html())
+
+    blocks = json.loads(e.to_json())
+
+    assert blocks["blocks"][0]["tunes"]
+
+    print(e.to_json())
+

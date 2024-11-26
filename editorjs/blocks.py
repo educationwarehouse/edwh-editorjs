@@ -93,9 +93,24 @@ class HeadingBlock(EditorJSBlock):
     def to_markdown(cls, data: EditorChildData) -> str:
         level = data.get("level", 1)
         text = data.get("text", "")
+        tunes = data.get("tunes", {})
 
         if not (1 <= level <= 6):
             raise ValueError("Header level must be between 1 and 6.")
+
+        if (
+            tunes.get("alignmentTune")
+            and (alignment := tunes["alignmentTune"].get("alignment"))
+            and (alignment != "left")
+        ):
+            # can't just return regular HTML because then it will turn into a raw block
+            return AlignmentBlock.to_markdown(
+                {
+                    "text": text,
+                    "tag": f"h{level}",
+                    "alignment": alignment,
+                }
+            )
 
         return f"{'#' * level} {text}\n"
 
@@ -143,6 +158,21 @@ class ParagraphBlock(EditorJSBlock):
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
         text = data.get("text", "")
+        tunes = data.get("tunes", {})
+
+        if (
+            tunes.get("alignmentTune")
+            and (alignment := tunes["alignmentTune"].get("alignment"))
+            and (alignment != "left")
+        ):
+            return AlignmentBlock.to_markdown(
+                {
+                    "text": text,
+                    "tag": "p",
+                    "alignment": alignment,
+                }
+            )
+
         return f"{text}\n\n"
 
     @classmethod
@@ -615,6 +645,49 @@ class AttachmentBlock(EditorJSBlock):
             </a>
         </div>
         """
+
+
+@block("alignment")
+class AlignmentBlock(EditorJSBlock):
+    @classmethod
+    def to_markdown(cls, data: EditorChildData) -> str:
+        tag = data["tag"]
+        alignment = data["alignment"]
+        content = data["text"]
+
+        return f"<editorjs type='alignment' tag='{tag}' alignment='{alignment}'>{content}</editorjs>\n\n"
+
+    @classmethod
+    def to_json(cls, node: MDChildNode) -> list[dict]:
+        # only paragraph and headers can be aligned
+        tag: str = node["tag"]
+        text: str = node["body"]
+        alignment = node["alignment"]
+        data = {"text": text}
+
+        if tag == "p":
+            _type = "paragraph"
+        elif tag.startswith("h"):
+            _type = "header"
+            data["level"] = int(tag.removeprefix("h"))
+        else:
+            # doesn't support alignment
+            raise TODO(f"Unsupported tag for alignment: {tag}")
+
+        return [
+            {
+                "type": _type,
+                "data": data,
+                "tunes": {"alignmentTune": {"alignment": alignment}},
+            }
+        ]
+
+    @classmethod
+    def to_text(cls, node: MDChildNode) -> str:
+        tag = node["tag"]
+        body = node["body"]
+        alignment = node["alignment"]
+        return f"<{tag} style='text-align: {alignment}'>{body}</{tag}>"
 
 
 class AttributeParser(HTMLParser):
