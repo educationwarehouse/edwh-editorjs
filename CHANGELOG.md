@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.1.1 (2024-11-26)
+
+### Fix
+
+* More newlines for better block separation ([`11574df`](https://github.com/educationwarehouse/edwh-editorjs/commit/11574df641ed9c7b4da11a0ee8c102b737c3cf66))
+
 ## v2.1.0 (2024-11-26)
 
 ### Feature
