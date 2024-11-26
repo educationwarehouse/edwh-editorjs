@@ -130,6 +130,14 @@ class HeadingBlock(EditorJSBlock):
         return child.get("value", "")
 
 
+def paragraph_block(text: str):
+    return {"type": "paragraph", "data": {"text": text}}
+
+
+def raw_block(html: str):
+    return {"type": "raw", "data": {"html": html}}
+
+
 @block("paragraph")
 class ParagraphBlock(EditorJSBlock):
     @classmethod
@@ -173,9 +181,10 @@ class ParagraphBlock(EditorJSBlock):
 
             elif _type == "image":
                 if current_text:
-                    result.append({"data": {"text": current_text}, "type": "raw" if any_html else "paragraph"})
+                    # {"id":"zksvpxQTDD","type":"raw","data":{"html":"<marquee> raw </marquee>"}}
+                    result.append(raw_block(current_text) if any_html else paragraph_block(current_text))
                     current_text = ""
-                    any_html = False # reset
+                    any_html = False  # reset
 
                 result.extend(ImageBlock.to_json(child))
             else:
@@ -194,7 +203,7 @@ class ParagraphBlock(EditorJSBlock):
 
         # final text after image:
         if current_text:
-            result.append({"data": {"text": current_text}, "type": "raw" if any_html else "paragraph"})
+            result.append(raw_block(current_text) if any_html else paragraph_block(current_text))
 
         return result
 

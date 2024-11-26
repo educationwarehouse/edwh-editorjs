@@ -123,3 +123,16 @@ def test_raw_html():
     blocks = json.loads(e.to_json())
 
     assert blocks["blocks"][1]["type"] == "raw", blocks["blocks"][1]["type"]
+
+def test_code():
+    e = EditorJS.from_markdown(textwrap.dedent("""
+    Read code:
+    
+    ```
+    <marquee> code </marquee>
+    ```
+    """))
+
+    blocks = json.loads(e.to_json())
+
+    print(blocks)
