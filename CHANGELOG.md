@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.2.0 (2024-11-26)
+
+### Feature
+
+* Support the alignment tune plugin ([`652cb58`](https://github.com/educationwarehouse/edwh-editorjs/commit/652cb58920b35fbb36c56d665e52e69a40811258))
+
 ## v2.1.1 (2024-11-26)
 
 ### Fix
