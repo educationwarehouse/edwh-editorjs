@@ -2,6 +2,16 @@
 
 <!--next-version-placeholder-->
 
+## v2.1.0 (2024-11-26)
+
+### Feature
+
+* `EditorJS.from_json` now also accepts a (json) list of blocks instead of the full object (dictionary with time, version, blocks) ([`9f24c15`](https://github.com/educationwarehouse/edwh-editorjs/commit/9f24c15983948db96153901e804b9a2b11029f49))
+
+### Fix
+
+* Better separation between raw and paragraph blocks ([`f7620cf`](https://github.com/educationwarehouse/edwh-editorjs/commit/f7620cf6f34a0a9b9a218fb1c78a67a04f15b78e))
+
 ## v2.0.2 (2024-11-26)
 
 ### Fix
