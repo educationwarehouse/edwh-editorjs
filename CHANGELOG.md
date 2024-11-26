@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.0.1 (2024-11-26)
+
+### Fix
+
+* Table block, raw html block ([`849aeee`](https://github.com/educationwarehouse/edwh-editorjs/commit/849aeee9fcafd51cb71416edeb127820ee3fc89f))
+
 ## v2.0.0 (2024-11-18)
 
 ### Features
