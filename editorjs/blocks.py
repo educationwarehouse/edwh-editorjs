@@ -382,7 +382,7 @@ class ImageBlock(EditorJSBlock):
     def to_markdown(cls, data: EditorChildData) -> str:
         url = data.get("url", "") or data.get("file", {}).get("url", "")
         caption = data.get("caption", "")
-        return f"""![{caption}]({url} "{caption}")\n"""
+        return f"""![{caption}]({url} "{caption}")\n\n"""
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
@@ -533,7 +533,7 @@ class LinkBlock(EditorJSBlock):
         title = meta.get("title", "")
         description = meta.get("description", "")
         image = meta.get("image", {}).get("url", "")
-        return f"""<editorjs type="linkTool" href="{link}" title="{title}" image="{image}">{description}</editorjs>"""
+        return f"""<editorjs type="linkTool" href="{link}" title="{title}" image="{image}">{description}</editorjs>\n\n"""
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
@@ -582,7 +582,7 @@ class AttachmentBlock(EditorJSBlock):
     def to_markdown(cls, data: EditorChildData) -> str:
         file = data.get("file", {}).get("url", "")
         title = data.get("title", "")
-        return f"""<editorjs type="attaches" file="{file}">{title}</editorjs>"""
+        return f"""<editorjs type="attaches" file="{file}">{title}</editorjs>\n\n"""
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
