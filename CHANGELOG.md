@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.3.1 (2024-11-27)
+
+### Fix
+
+* **embed:** Simplify embed to just the iframe without most editorjs boilerplate ([`4cfa4e6`](https://github.com/educationwarehouse/edwh-editorjs/commit/4cfa4e6c05fc0d3d39f50b2ccb60c41d42c1b506))
+
 ## v2.3.0 (2024-11-27)
 
 ### Feature
