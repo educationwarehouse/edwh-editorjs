@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v2.3.0 (2024-11-27)
+
+### Feature
+
+* **attachment:** Support more optional fields such as extension, size ([`212cf7e`](https://github.com/educationwarehouse/edwh-editorjs/commit/212cf7e871f3b9b5137234fea050e24b268229f5))
+* Support `embed` block ([`99f0ffe`](https://github.com/educationwarehouse/edwh-editorjs/commit/99f0ffe257efb11eab76f266cf86e72c2f9df2eb))
+
 ## v2.2.2 (2024-11-26)
 
 ### Fix
