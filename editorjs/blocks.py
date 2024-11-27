@@ -753,11 +753,7 @@ class EmbedBlock(EditorJSBlock):
         caption = node.get("caption", "")
         return f"""
         <div class="cdx-block embed-tool">
-            <preloader class="embed-tool__preloader">
-                <div class="embed-tool__url">{source}</div>
-            </preloader>
-            <iframe style="width:100%;" height="320" frameborder="0" allowfullscreen="" src="{embed}" class="embed-tool__content"></iframe>
-            <div class="cdx-input embed-tool__caption" contenteditable="true" data-placeholder="Enter a caption" data-empty="false">{caption}</div>
+            <iframe title='{caption}' style="width:100%;" height="320" frameborder="0" allowfullscreen="" src="{embed}" class="embed-tool__content"></iframe>
         </div>
         """
 
