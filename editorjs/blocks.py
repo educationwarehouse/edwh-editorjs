@@ -9,6 +9,7 @@ import typing as t
 from html.parser import HTMLParser
 from urllib.parse import urlparse
 
+import humanize
 import markdown2
 
 from .exceptions import TODO
@@ -203,7 +204,7 @@ class ParagraphBlock(EditorJSBlock):
                 else:
                     # <editorjs>something</editorjs> = 3 children
                     result.extend(
-                        EditorJSCustom.to_json({"children": nodes[idx: idx + 2]})
+                        EditorJSCustom.to_json({"children": nodes[idx : idx + 2]})
                     )
 
                     skip = 2
@@ -617,9 +618,14 @@ class AttachmentBlock(EditorJSBlock):
 
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
-        file = data.get("file", {}).get("url", "")
         title = data.get("title", "")
-        return f"""<editorjs type="attaches" file="{file}">{title}</editorjs>\n\n"""
+        file = data.get("file", {})
+        url = file.get("url", "")
+        name = file.get("name", "")
+        extension = file.get("extension", "")
+        size = file.get("size", "")
+
+        return f"""<editorjs type="attaches" file="{url}" name="{name}" extension="{extension}" size="{size}">{title}</editorjs>\n\n"""
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
@@ -627,7 +633,12 @@ class AttachmentBlock(EditorJSBlock):
             {
                 "type": "attaches",
                 "data": {
-                    "file": {"url": node.get("file", "")},
+                    "file": {
+                        "url": node.get("file", ""),
+                        "name": node.get("name", ""),
+                        "extension": node.get("extension", ""),
+                        "size": node.get("size", ""),
+                    },
                     "title": node.get("body", ""),
                 },
             }
@@ -635,19 +646,41 @@ class AttachmentBlock(EditorJSBlock):
 
     @classmethod
     def to_text(cls, node: MDChildNode) -> str:
+        # {'type': 'attaches', 'file': 'https://py4web.leiden.dockers.local/img/upload/8.deb?hash=778760cf05483147b2ff0fa0ddeab2b22d9343e8', 'name': 'gemistdownloadermd5-08d0e3cdb4f7e81986bdd0c60294dec03.0.0.5-1.deb', 'extension': 'deb', 'size': '1613660', 'body': 'gemistdownloader...
+
+        extension = node.get("extension", "")
+
+        file_icon = (
+            f"""
+            <div class="cdx-attaches__file-icon-background"></div>
+            <div class="cdx-attaches__file-icon-label" title="{extension}">{extension}</div>
+            """
+            if extension
+            else """
+            <div class="cdx-attaches__file-icon-background">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.3236 8.43554L9.49533 12.1908C9.13119 12.5505 8.93118 13.043 8.9393 13.5598C8.94741 14.0767 9.163 14.5757 9.53862 14.947C9.91424 15.3182 10.4191 15.5314 10.9422 15.5397C11.4653 15.5479 11.9637 15.3504 12.3279 14.9908L16.1562 11.2355C16.8845 10.5161 17.2845 9.53123 17.2682 8.4975C17.252 7.46376 16.8208 6.46583 16.0696 5.72324C15.3184 4.98066 14.3086 4.55425 13.2624 4.53782C12.2162 4.52138 11.2193 4.91627 10.4911 5.63562L6.66277 9.39093C5.57035 10.4699 4.97032 11.9473 4.99467 13.4979C5.01903 15.0485 5.66578 16.5454 6.79264 17.6592C7.9195 18.7731 9.43417 19.4127 11.0034 19.4374C12.5727 19.462 14.068 18.8697 15.1604 17.7907L18.9887 14.0354"></path></svg>
+            </div>
+            """
+        )
+
+        file_size = (
+            f"""<div class="cdx-attaches__size">{humanize.naturalsize(int(size))}</div>"""
+            if (size := node.get("size", ""))
+            else ""
+        )
+
         return f"""
         <div class="cdx-attaches cdx-attaches--with-file">
             <div class="cdx-attaches__file-icon">
-                <div class="cdx-attaches__file-icon-background">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.3236 8.43554L9.49533 12.1908C9.13119 12.5505 8.93118 13.043 8.9393 13.5598C8.94741 14.0767 9.163 14.5757 9.53862 14.947C9.91424 15.3182 10.4191 15.5314 10.9422 15.5397C11.4653 15.5479 11.9637 15.3504 12.3279 14.9908L16.1562 11.2355C16.8845 10.5161 17.2845 9.53123 17.2682 8.4975C17.252 7.46376 16.8208 6.46583 16.0696 5.72324C15.3184 4.98066 14.3086 4.55425 13.2624 4.53782C12.2162 4.52138 11.2193 4.91627 10.4911 5.63562L6.66277 9.39093C5.57035 10.4699 4.97032 11.9473 4.99467 13.4979C5.01903 15.0485 5.66578 16.5454 6.79264 17.6592C7.9195 18.7731 9.43417 19.4127 11.0034 19.4374C12.5727 19.462 14.068 18.8697 15.1604 17.7907L18.9887 14.0354"></path></svg>
-                </div>
+                {file_icon}
             </div>
             <div class="cdx-attaches__file-info">
                 <div class="cdx-attaches__title" data-placeholder="File title" data-empty="false">
-                {node.get("body", "")}
+                    {node.get("body", "")}
                 </div>
+                {file_size}
             </div>
-            <a class="cdx-attaches__download-button" href="{node.get('file', '')}" target="_blank" rel="nofollow noindex noreferrer">
+            <a class="cdx-attaches__download-button" href="{node.get('file', '')}" target="_blank" rel="nofollow noindex noreferrer" title="{node.get('name', '')}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M7 10L11.8586 14.8586C11.9367 14.9367 12.0633 14.9367 12.1414 14.8586L17 10"></path></svg>
             </a>
         </div>
@@ -711,12 +744,7 @@ class EmbedBlock(EditorJSBlock):
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
-        #  {'type': 'embed', 'service': 'youtube', 'source': 'https://www.youtube.com/watch?v=LDU_Txk06tM', 'embed': 'https://www.youtube.com/embed/LDU_Txk06tM', 'caption': 'krab'}
-        # ->
-        return [{
-            "type": "embed",
-            "data": node
-        }]
+        return [{"type": "embed", "data": node}]
 
     @classmethod
     def to_text(cls, node: MDChildNode) -> str:
@@ -735,6 +763,7 @@ class EmbedBlock(EditorJSBlock):
 
 
 ### end blocks
+
 
 class AttributeParser(HTMLParser):
     def __init__(self):

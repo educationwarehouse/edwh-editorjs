@@ -112,6 +112,17 @@ def test_attachment():
     print(e.to_json())
     print(e.to_html())
 
+    attachment_two = r"""[{"id":"RJGyL0ZWOL","type":"attaches","data":{"file":{"url":"https://py4web.leiden.dockers.local/img/upload/8.deb?hash=778760cf05483147b2ff0fa0ddeab2b22d9343e8","name":"gemistdownloader_3.0.0.5-1.deb","extension":"deb","size":1613660},"title":"gemistdownloader_3.0.0.5-1"}}]"""
+
+    e = EditorJS.from_json(attachment_two)
+    print(e.to_markdown())
+    print(e.to_html())
+    j = json.loads(e.to_json())
+    print(j)
+
+    assert j["blocks"][0]["data"]["file"]["size"]
+    assert j["blocks"][0]["data"]["file"]["extension"]
+
 
 def test_raw_html():
     # e = EditorJS.from_markdown(textwrap.dedent("""

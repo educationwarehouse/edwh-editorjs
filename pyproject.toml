@@ -29,6 +29,7 @@ dependencies = [
     # "bleach",
     "mdast",
     "markdown2",
+    "humanize",
 ]
 
 [project.optional-dependencies]
