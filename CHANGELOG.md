@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.3.2 (2024-11-27)
+
+### Fix
+
+* (refactor) clean up todo's, add `Unreachable` for when some branch/function should never be used ([`3226642`](https://github.com/educationwarehouse/edwh-editorjs/commit/3226642cfc8adb9a3cad6052d02ea6fc6c048058))
+
 ## v2.3.1 (2024-11-27)
 
 ### Fix
