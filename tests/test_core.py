@@ -226,3 +226,12 @@ def test_alignment():
 
     print(e.to_json())
 
+
+def test_embed():
+    json_blocks = r"""{"time":1732710342696,"blocks":[{"id":"AzmqC3FWx3","type":"embed","data":{"service":"youtube","source":"https://www.youtube.com/watch?v=LDU_Txk06tM","embed":"https://www.youtube.com/embed/LDU_Txk06tM","width":580,"height":320,"caption":"krab"}}],"version":"2.30.6"}"""
+
+    e = EditorJS.from_json(json_blocks)
+
+    print(e.to_markdown())
+    print(e.to_html())
+    print(e.to_json())

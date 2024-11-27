@@ -4,6 +4,7 @@ mdast to editorjs
 
 import abc
 import re
+import traceback
 import typing as t
 from html.parser import HTMLParser
 from urllib.parse import urlparse
@@ -199,15 +200,15 @@ class ParagraphBlock(EditorJSBlock):
                 if child.get("value", "").endswith("/>"):
                     # self-closing
                     result.append(EditorJSCustom.to_json(node))
-                    continue
                 else:
                     # <editorjs>something</editorjs> = 3 children
                     result.extend(
-                        EditorJSCustom.to_json({"children": nodes[idx : idx + 2]})
+                        EditorJSCustom.to_json({"children": nodes[idx: idx + 2]})
                     )
 
                     skip = 2
-                    continue
+
+                continue
 
             elif _type == "image":
                 if current_text:
@@ -480,7 +481,13 @@ class RawBlock(EditorJSBlock):
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
-        return [raw_block(cls.to_text(node))]
+        # todo: apply same logic as paragraph block to find <editorjs/> items!!!
+        raw = cls.to_text(node)
+
+        if raw.startswith("<editorjs"):
+            return EditorJSCustom.to_json({"children": [node]})
+        else:
+            return [raw_block(raw)]
 
     @classmethod
     def to_text(cls, node: MDChildNode) -> str:
@@ -689,6 +696,45 @@ class AlignmentBlock(EditorJSBlock):
         alignment = node["alignment"]
         return f"<{tag} style='text-align: {alignment}'>{body}</{tag}>"
 
+
+@block("embed")
+class EmbedBlock(EditorJSBlock):
+
+    @classmethod
+    def to_markdown(cls, data: EditorChildData) -> str:
+        service = data.get("service", "")
+        source = data.get("source", "")
+        embed = data.get("embed", "")
+        caption = data.get("caption", "")
+
+        return f"<editorjs type='embed' service='{service}' source='{source}' embed='{embed}' caption='{caption}'/>\n\n"
+
+    @classmethod
+    def to_json(cls, node: MDChildNode) -> list[dict]:
+        #  {'type': 'embed', 'service': 'youtube', 'source': 'https://www.youtube.com/watch?v=LDU_Txk06tM', 'embed': 'https://www.youtube.com/embed/LDU_Txk06tM', 'caption': 'krab'}
+        # ->
+        return [{
+            "type": "embed",
+            "data": node
+        }]
+
+    @classmethod
+    def to_text(cls, node: MDChildNode) -> str:
+        source = node.get("source", "")
+        embed = node.get("embed", "")
+        caption = node.get("caption", "")
+        return f"""
+        <div class="cdx-block embed-tool">
+            <preloader class="embed-tool__preloader">
+                <div class="embed-tool__url">{source}</div>
+            </preloader>
+            <iframe style="width:100%;" height="320" frameborder="0" allowfullscreen="" src="{embed}" class="embed-tool__content"></iframe>
+            <div class="cdx-input embed-tool__caption" contenteditable="true" data-placeholder="Enter a caption" data-empty="false">{caption}</div>
+        </div>
+        """
+
+
+### end blocks
 
 class AttributeParser(HTMLParser):
     def __init__(self):
