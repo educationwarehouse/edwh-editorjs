@@ -4,7 +4,6 @@ mdast to editorjs
 
 import abc
 import re
-import traceback
 import typing as t
 from html.parser import HTMLParser
 from urllib.parse import urlparse
@@ -12,7 +11,7 @@ from urllib.parse import urlparse
 import humanize
 import markdown2
 
-from .exceptions import TODO
+from .exceptions import TODO, Unreachable
 from .types import EditorChildData, MDChildNode
 
 
@@ -62,7 +61,6 @@ def process_styled_content(item: MDChildNode, strict: bool = True) -> str:
         "strongEmphasis": "<b><i>{value}</i></b>",
         "link": '<a href="{url}">{value}</a>',
         "inlineCode": '<code class="inline-code">{value}</code>',
-        # todo: <mark>, linktool
     }
 
     if _type in BLOCKS:
@@ -314,12 +312,6 @@ class ListBlock(EditorJSBlock):
                 }
             )
 
-        # todo: detect 'checklist':
-        """
-        type: checklist
-        data: {items: [{text: "a", checked: false}, {text: "b", checked: false}, {text: "c", checked: true},…]}
-        """
-
         if could_be_checklist:
             return [
                 {
@@ -482,10 +474,10 @@ class RawBlock(EditorJSBlock):
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
-        # todo: apply same logic as paragraph block to find <editorjs/> items!!!
         raw = cls.to_text(node)
 
         if raw.startswith("<editorjs"):
+            # not a raw block but (probably) a self-closing editorjs block
             return EditorJSCustom.to_json({"children": [node]})
         else:
             return [raw_block(raw)]
@@ -559,7 +551,8 @@ class TableBlock(EditorJSBlock):
 
     @classmethod
     def to_text(cls, node: MDChildNode) -> str:
-        raise TODO(node)
+        # I think this might be triggered if there is a table (deeply) within a paragraph block?
+        raise TODO(["TableBlock.to_text", node])
 
 
 @block("linkTool")
@@ -712,7 +705,7 @@ class AlignmentBlock(EditorJSBlock):
             data["level"] = int(tag.removeprefix("h"))
         else:
             # doesn't support alignment
-            raise TODO(f"Unsupported tag for alignment: {tag}")
+            raise NotImplementedError(f"Unsupported tag for alignment: {tag}")
 
         return [
             {
@@ -777,7 +770,9 @@ class AttributeParser(HTMLParser):
 
 class EditorJSCustom(EditorJSBlock, markdown2.Extra):
     """
-    Special type of block to deal with custom attributes
+    Special type of block to deal with custom attributes.
+
+    This is both a special editorjs block as well as a markdown2 plugin!
     """
 
     name = "editorjs"
@@ -792,23 +787,31 @@ class EditorJSCustom(EditorJSBlock, markdown2.Extra):
 
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
-        raise TODO()
+        raise Unreachable("Custom Blocks have their own to_markdown logic.")
 
     @classmethod
-    def to_json(cls, node: MDChildNode) -> list[dict]:
-        html = "".join(_["value"] for _ in node.get("children", []))
+    def _find_right_block(cls, html: str) -> tuple[EditorJSBlock, dict]:
         attrs, body = cls.parse_html(html)
         _type = attrs.get("type", "")
         attrs.setdefault("body", body)  # only if there is no such attribute yet
 
-        if not (handler := BLOCKS.get(_type)):
+        handler = BLOCKS.get(_type)
+
+        if not handler:
             raise ValueError(f"Unknown custom type {_type}")
 
+        return handler, attrs
+
+    @classmethod
+    def to_json(cls, node: MDChildNode) -> list[dict]:
+        html = "".join(_["value"] for _ in node.get("children", []))
+        handler, attrs = cls._find_right_block(html)
         return handler.to_json(attrs)
 
     @classmethod
     def to_text(cls, node: MDChildNode) -> str:
-        raise TODO()
+        handler, attrs = cls._find_right_block(node.get("value", ""))
+        return handler.to_text(attrs)
 
     # markdown2:
     re_short = re.compile(r"<editorjs.*?/>")
@@ -816,13 +819,7 @@ class EditorJSCustom(EditorJSBlock, markdown2.Extra):
 
     def run(self, text: str) -> str:
         def replace_html(match):
-            attrs, body = self.parse_html(match.group())
-            _type = attrs.get("type", "")
-            attrs.setdefault("body", body)  # only if there is no such attribute yet
-
-            if not (handler := BLOCKS.get(_type)):
-                raise ValueError(f"Unknown custom type {_type}")
-
+            handler, attrs = self._find_right_block(match.group())
             return handler.to_text(attrs)
 
         # Substitute using the replacement functions
