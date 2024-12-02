@@ -1,11 +1,13 @@
 import json
 import typing as t
+import warnings
 
 import markdown2
 import mdast
 from typing_extensions import Self
 
 from .blocks import BLOCKS
+from .exceptions import TODO
 from .helpers import unix_timestamp
 from .types import MDRootNode
 
@@ -41,13 +43,26 @@ class EditorJS:
         for child in blocks:
             _type = child["type"]
             if not (block := BLOCKS.get(_type)):
-                raise TypeError(f"from_json: Unsupported block type `{_type}`")
+                warnings.warn(
+                    f"from_json: Unsupported block type `{_type}`",
+                    category=RuntimeWarning,
+                )
+                continue
 
-            data = child.get("data", {})
-            # forward any 'tunes' via data:
-            data["tunes"] = data.get("tunes") or child.get("tunes") or {}
+            try:
+                data = child.get("data", {})
+                # forward any 'tunes' via data:
+                data["tunes"] = data.get("tunes") or child.get("tunes") or {}
 
-            markdown_items.append(block.to_markdown(data))
+                markdown_items.append(block.to_markdown(data))
+            except Exception as e:
+                warnings.warn(
+                    "from_json: Oh oh, unexpected block failure!",
+                    category=RuntimeWarning,
+                    source=e,
+                )
+                # if isinstance(e, TODO):
+                #     raise e
 
         markdown = "".join(markdown_items)
         return cls.from_markdown(markdown)
@@ -76,9 +91,22 @@ class EditorJS:
         for child in self._mdast["children"]:
             _type = child["type"]
             if not (block := BLOCKS.get(_type)):
-                raise TypeError(f"to_json: Unsupported block type `{_type}`")
+                warnings.warn(
+                    f"to_json: Unsupported block type `{_type}`",
+                    category=RuntimeWarning,
+                )
+                continue
 
-            blocks.extend(block.to_json(child))
+            try:
+                blocks.extend(block.to_json(child))
+            except Exception as e:
+                warnings.warn(
+                    "to_json: Oh oh, unexpected block failure!",
+                    category=RuntimeWarning,
+                    source=e,
+                )
+                # if isinstance(e, TODO):
+                #     raise e
 
         data = {"time": unix_timestamp(), "blocks": blocks, "version": EDITORJS_VERSION}
 
