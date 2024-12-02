@@ -2,6 +2,16 @@
 
 <!--next-version-placeholder-->
 
+## v2.4.0 (2024-12-02)
+
+### Feature
+
+* **image:** Support more options for the image block ([`c74dcce`](https://github.com/educationwarehouse/edwh-editorjs/commit/c74dccef5c1115038f6de0f08250dfa6cff18796))
+
+### Fix
+
+* Less exceptions, more warnings for better ease-of-use ([`891fca1`](https://github.com/educationwarehouse/edwh-editorjs/commit/891fca198e774c53a8b6365b927a080f61c0b2c8))
+
 ## v2.3.2 (2024-11-27)
 
 ### Fix
