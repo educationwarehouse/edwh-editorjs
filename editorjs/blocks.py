@@ -406,7 +406,20 @@ class ImageBlock(EditorJSBlock):
     def to_markdown(cls, data: EditorChildData) -> str:
         url = data.get("url", "") or data.get("file", {}).get("url", "")
         caption = data.get("caption", "")
-        return f"""![{caption}]({url} "{caption}")\n\n"""
+
+        with_border = "1" if data.get("withBorder") else ""
+        with_background = "1" if data.get("withBackground") else ""
+        stretched = "1" if data.get("stretched") else ""
+
+        if any((with_border, with_background, stretched)):
+            # custom type to support custom options:
+            return f"""<editorjs type="image" caption="{caption}" border="{with_border}" background="{with_background}" stretched="{stretched}" url="{url}" />\n\n"""
+        else:
+            return f"""![{caption}]({url} "{caption}")\n\n"""
+
+    @classmethod
+    def _caption(cls, node: MDChildNode):
+        return node.get("alt") or node.get("caption") or ""
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
@@ -414,15 +427,34 @@ class ImageBlock(EditorJSBlock):
             {
                 "type": "image",
                 "data": {
-                    "caption": cls.to_text(node),
                     "file": {"url": node.get("url")},
+                    "caption": cls._caption(node),
+                    "withBorder": bool(node.get("border", False)),
+                    "stretched": bool(node.get("stretched", False)),
+                    "withBackground": bool(node.get("background", False)),
                 },
             }
         ]
 
     @classmethod
     def to_text(cls, node: MDChildNode) -> str:
-        return node.get("alt") or node.get("caption") or ""
+        caption = cls._caption(node)
+        url = node.get("url")
+
+        background = node.get("background") or ""
+        stretched = node.get("stretched") or ""
+        border = node.get("border") or ""
+
+        return f"""
+        <div class="ce-block {stretched and 'ce-block--stretched'}">
+            <div class="ce-block__content">
+            <div class="cdx-block image-tool image-tool--filled {background and 'image-tool--withBackground'} {stretched and 'image-tool--stretched'} {border and 'image-tool--withBorder'}">
+                <div class="image-tool__image">
+                    <img class="image-tool__image-picture" src="{url}" title="{caption}" alt="{caption}">
+                </div>
+            </div>
+        </div>
+        """
 
 
 @block("blockquote", "quote")

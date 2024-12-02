@@ -246,3 +246,13 @@ def test_embed():
     print(e.to_markdown())
     print(e.to_html())
     print(e.to_json())
+
+
+def test_image_options():
+    json_blocks = r"""{"time":1733155142016,"blocks":[{"id":"e7_WBThzLQ","type":"image","data":{"caption":"border","withBorder":true,"withBackground":false,"stretched":false,"file":{"url":"https://py4web.leiden.dockers.local/img/upload/5.jpg?hash=b39755c8a568cbf45d329e3a3128fb43065b1d1b","name":"kat.jpg","title":"kat","extension":"jpg","size":3682051}}},{"id":"B5qVcjqBuB","type":"image","data":{"caption":"stretch","withBorder":false,"withBackground":false,"stretched":true,"file":{"url":"https://py4web.leiden.dockers.local/img/upload/6.jpg?hash=b39755c8a568cbf45d329e3a3128fb43065b1d1b","name":"kat.jpg","title":"kat","extension":"jpg","size":3682051}}},{"id":"ft32yP2_cv","type":"image","data":{"caption":"background","withBorder":false,"withBackground":true,"stretched":false,"file":{"url":"https://py4web.leiden.dockers.local/img/upload/7.jpg?hash=b39755c8a568cbf45d329e3a3128fb43065b1d1b","name":"kat.jpg","title":"kat","extension":"jpg","size":3682051}}}],"version":"2.30.7"}"""
+
+    e = EditorJS.from_json(json_blocks)
+
+    print(e.to_markdown())
+    print(e.to_html())
+    print(e.to_json())
