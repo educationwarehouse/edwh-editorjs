@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.5.0 (2025-03-20)
+
+### Feature
+
+* Improve markdown conversion and image handling in EditorJS blocks ([`80d0fc0`](https://github.com/educationwarehouse/edwh-editorjs/commit/80d0fc00a4e39b279de35998d1a85a37282c58a7))
+
 ## v2.4.0 (2024-12-02)
 
 ### Feature
