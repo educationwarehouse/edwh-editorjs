@@ -8,6 +8,7 @@ import typing as t
 from html.parser import HTMLParser
 from urllib.parse import urlparse
 
+import html2markdown
 import humanize
 import markdown2
 
@@ -53,6 +54,7 @@ def process_styled_content(item: MDChildNode, strict: bool = True) -> str:
         A formatted HTML string based on the item type.
     """
     _type = item.get("type")
+
     html_wrappers = {
         "text": "{value}",
         "html": "{value}",
@@ -82,9 +84,16 @@ def process_styled_content(item: MDChildNode, strict: bool = True) -> str:
 
 
 def default_to_text(node: MDChildNode):
-    return "".join(
-        process_styled_content(child) for child in node.get("children", [])
-    ) or process_styled_content(node)
+    if node["type"] == "paragraph":
+        return "".join(
+            process_styled_content(child) for child in node.get("children", [])
+        )
+    else:
+        return process_styled_content(node)
+
+    # return "".join(
+    #     process_styled_content(child) for child in node.get("children", [])
+    # ) or process_styled_content(node)
 
 
 @block("heading", "header")
@@ -172,6 +181,9 @@ class ParagraphBlock(EditorJSBlock):
                     "alignment": alignment,
                 }
             )
+
+        # deal with bold etc:
+        text = html2markdown.convert(text)
 
         return f"{text}\n\n"
 
@@ -384,7 +396,7 @@ class CodeBlock(EditorJSBlock):
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
         code = data.get("code", "")
-        return f"```\n" f"{code}" f"\n```\n"
+        return f"```\n{code}\n```\n"
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
@@ -411,11 +423,8 @@ class ImageBlock(EditorJSBlock):
         with_background = "1" if data.get("withBackground") else ""
         stretched = "1" if data.get("stretched") else ""
 
-        if any((with_border, with_background, stretched)):
-            # custom type to support custom options:
-            return f"""<editorjs type="image" caption="{caption}" border="{with_border}" background="{with_background}" stretched="{stretched}" url="{url}" />\n\n"""
-        else:
-            return f"""![{caption}]({url} "{caption}")\n\n"""
+        # always custom type so we can render as <figure> instead of markdown2's default (simple <img>)
+        return f"""<editorjs type="image" caption="{caption}" border="{with_border}" background="{with_background}" stretched="{stretched}" url="{url}" />\n\n"""
 
     @classmethod
     def _caption(cls, node: MDChildNode):
@@ -446,11 +455,14 @@ class ImageBlock(EditorJSBlock):
         border = node.get("border") or ""
 
         return f"""
-        <div class="ce-block {stretched and 'ce-block--stretched'}">
+        <div class="ce-block {stretched and "ce-block--stretched"}">
             <div class="ce-block__content">
-            <div class="cdx-block image-tool image-tool--filled {background and 'image-tool--withBackground'} {stretched and 'image-tool--stretched'} {border and 'image-tool--withBorder'}">
+            <div class="cdx-block image-tool image-tool--filled {background and "image-tool--withBackground"} {stretched and "image-tool--stretched"} {border and "image-tool--withBorder"}">
                 <div class="image-tool__image">
-                    <img class="image-tool__image-picture" src="{url}" title="{caption}" alt="{caption}">
+                    <figure>
+                        <img class="image-tool__image-picture" src="{url}" title="{caption}" alt="{caption}">
+                        <figcaption>{caption}</figcaption>
+                    </figure>
                 </div>
             </div>
         </div>
@@ -467,7 +479,7 @@ class QuoteBlock(EditorJSBlock):
         result = f"> {text}\n"
         if caption := data.get("caption", ""):
             result += f"> <cite>{caption}</cite>\n"
-        return result
+        return result + "\n"
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
@@ -493,12 +505,13 @@ class QuoteBlock(EditorJSBlock):
 
     @classmethod
     def to_text(cls, node: MDChildNode) -> str:
-        return default_to_text(node)
+        return "".join(
+            process_styled_content(child) for child in node.get("children", [])
+        )
 
 
 @block("raw", "html")
 class RawBlock(EditorJSBlock):
-
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
         text = data.get("html", "")
@@ -521,7 +534,6 @@ class RawBlock(EditorJSBlock):
 
 @block("table")
 class TableBlock(EditorJSBlock):
-
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
         """
@@ -640,7 +652,6 @@ class LinkBlock(EditorJSBlock):
 
 @block("attaches")
 class AttachmentBlock(EditorJSBlock):
-
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
         title = data.get("title", "")
@@ -705,7 +716,7 @@ class AttachmentBlock(EditorJSBlock):
                 </div>
                 {file_size}
             </div>
-            <a class="cdx-attaches__download-button" href="{node.get('file', '')}" target="_blank" rel="nofollow noindex noreferrer" title="{node.get('name', '')}">
+            <a class="cdx-attaches__download-button" href="{node.get("file", "")}" target="_blank" rel="nofollow noindex noreferrer" title="{node.get("name", "")}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M7 10L11.8586 14.8586C11.9367 14.9367 12.0633 14.9367 12.1414 14.8586L17 10"></path></svg>
             </a>
         </div>
@@ -757,7 +768,6 @@ class AlignmentBlock(EditorJSBlock):
 
 @block("embed")
 class EmbedBlock(EditorJSBlock):
-
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
         service = data.get("service", "")

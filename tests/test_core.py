@@ -185,7 +185,8 @@ asdfsdajgdsjaklgkjds
 
 
 def test_code():
-    e = EditorJS.from_markdown(textwrap.dedent("""
+    e = EditorJS.from_markdown(
+        textwrap.dedent("""
     Read code:
     
     ```
@@ -193,7 +194,8 @@ def test_code():
     ```
     
     End of code
-    """))
+    """)
+    )
 
     blocks = json.loads(e.to_json())
 
@@ -256,3 +258,38 @@ def test_image_options():
     print(e.to_markdown())
     print(e.to_html())
     print(e.to_json())
+
+
+def test_figcaption():
+    js = """{"time":1742471258492,"blocks":[{"id":"ZoA3rbc05C","type":"image","data":{"caption":"Party Time!","withBorder":false,"withBackground":false,"stretched":false,"file":{"url":"https://py4web.leiden.dockers.local/img/upload/23.png?hash=979795a433fc15cb94eccb3159f1f1e4054b1664"}}}],"version":"2.30.7"}"""
+    e = EditorJS.from_json(js)
+
+    html = e.to_html()
+
+    assert "figcaption" in html
+
+
+def test_bold():
+    js = """{"time":1742475802066,"blocks":[{"id":"v_Kc51dnJH","type":"paragraph","data":{"text":"Deze tekst is <b>half bold</b> en half niet"},"tunes":{"alignmentTune":{"alignment":"left"}}},{"id":"q_fkuEFcY5","type":"paragraph","data":{"text":"<b>Deze tekst is heel bold</b>"},"tunes":{"alignmentTune":{"alignment":"left"}}}],"version":"2.30.7"}"""
+
+    e = EditorJS.from_json(js)
+
+    print(
+        e._mdast,
+        e.to_json(),
+        e.to_html(),
+        e.to_markdown(),
+    )
+
+
+def test_quotes():
+    js = """{"time":1742477286420,"blocks":[{"id":"PpmEaxeSkq","type":"quote","data":{"text":"To baldly go where no bald man has ever gone before","caption":"a bald guy","alignment":"left"}},{"id":"26ERFQ6U3V","type":"quote","data":{"text":"Einstein was een sukkel","caption":"Einstein's ex vrouw","alignment":"left"}},{"id":"RB8AdaCd86","type":"quote","data":{"text":"Asdf","caption":"fsda-man","alignment":"left"}},{"id":"BCSus2rhUr","type":"paragraph","data":{"text":"groetjes"},"tunes":{"alignmentTune":{"alignment":"left"}}}],"version":"2.30.7"}"""
+
+    e = EditorJS.from_json(js)
+
+    print(
+        e._mdast,
+        e.to_json(),
+        e.to_html(),
+        e.to_markdown(),
+    )

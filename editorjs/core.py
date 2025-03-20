@@ -135,7 +135,6 @@ class EditorJS:
         Export HTML string
         """
         md = self.to_markdown()
-        # todo: deal with custom elements like linktool, attaches
         return self._md.convert(md)
 
     def __repr__(self):
