@@ -61,8 +61,8 @@ class EditorJS:
                     category=RuntimeWarning,
                     source=e,
                 )
-                # if isinstance(e, TODO):
-                #     raise e
+                if isinstance(e, TODO):
+                    raise e
 
         markdown = "".join(markdown_items)
         return cls.from_markdown(markdown)
@@ -105,8 +105,8 @@ class EditorJS:
                     category=RuntimeWarning,
                     source=e,
                 )
-                # if isinstance(e, TODO):
-                #     raise e
+                if isinstance(e, TODO):
+                    raise e
 
         data = {"time": unix_timestamp(), "blocks": blocks, "version": EDITORJS_VERSION}
 

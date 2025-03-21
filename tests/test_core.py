@@ -293,3 +293,11 @@ def test_quotes():
         e.to_html(),
         e.to_markdown(),
     )
+
+
+def test_carousel():
+    js = """{"time":1742566954100,"blocks":[{"id":"qCNjHYFt31","type":"carousel","data":{"items":[{"url":"https://py4web.leiden.dockers.local/img/upload/24.jpg?hash=cf91ca21b6825a582a9a37d517a72f4b0615d634","caption":"schema"},{"url":"https://py4web.leiden.dockers.local/img/upload/25.png?hash=1bb50e8848b8309da308a4bcf605a2b5868fdc19","caption":"kombino"},{"url":"https://py4web.leiden.dockers.local/img/upload/26.png?hash=6f166107faefe4019e5e4a8d3686d8bf9090c864","caption":"koningshofje"},{"url":"https://py4web.leiden.dockers.local/img/upload/27.png?hash=c1c5da45cf0734df9a48239857beef98a0d790d1","caption":"Rode Panda"}],"config":"standard","countItemEachRow":"3"}}],"version":"2.30.7"}"""
+
+    e = EditorJS.from_json(js)
+
+    print(e.to_json())

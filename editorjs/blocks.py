@@ -205,7 +205,7 @@ class ParagraphBlock(EditorJSBlock):
             any_html |= _type == "html"
 
             # deal with custom types
-            if _type == "html" and child.get("value", "").startswith("<editorjs"):
+            if child.get("value", "").startswith("<editorjs"):
                 # special type, e.g. <editorjs type="linkTool" href=...>...</editorjs>
 
                 if child.get("value", "").endswith("/>"):
@@ -213,12 +213,22 @@ class ParagraphBlock(EditorJSBlock):
                     result.append(EditorJSCustom.to_json(node))
                 else:
                     # <editorjs>something</editorjs> = 3 children
-                    result.extend(
-                        EditorJSCustom.to_json({"children": nodes[idx : idx + 2]})
+                    # <editorjs><idk>something</idk><else>or other</else></editorjs> = 6+ children
+
+                    cnt = (
+                        next(
+                            idx
+                            for idx, node in enumerate(nodes)
+                            if node.get("value", "").startswith("</editorjs>")
+                        )
+                        + 1
                     )
 
-                    skip = 2
+                    result.extend(
+                        EditorJSCustom.to_json({"children": nodes[idx : idx + cnt]})
+                    )
 
+                    skip = cnt
                 continue
 
             elif _type == "image":
@@ -731,7 +741,7 @@ class AlignmentBlock(EditorJSBlock):
         alignment = data["alignment"]
         content = data["text"]
 
-        return f"<editorjs type='alignment' tag='{tag}' alignment='{alignment}'>{content}</editorjs>\n\n"
+        return f"""<editorjs type='alignment' tag="{tag}" alignment="{alignment}">{content}</editorjs>\n\n"""
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
@@ -775,7 +785,7 @@ class EmbedBlock(EditorJSBlock):
         embed = data.get("embed", "")
         caption = data.get("caption", "")
 
-        return f"<editorjs type='embed' service='{service}' source='{source}' embed='{embed}' caption='{caption}'/>\n\n"
+        return f"""<editorjs type='embed' service="{service}" source="{source}" embed="{embed}" caption="{caption}"/>\n\n"""
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
@@ -791,6 +801,45 @@ class EmbedBlock(EditorJSBlock):
             <iframe title='{caption}' style="width:100%;" height="320" frameborder="0" allowfullscreen="" src="{embed}" class="embed-tool__content"></iframe>
         </div>
         """
+
+
+@block("carousel-item")
+class CarouselItemBlock(EditorJSBlock):
+    @classmethod
+    def to_markdown(cls, data: EditorChildData) -> str:
+        url = data.get("url", "")
+        caption = data.get("caption", "")
+        return f"""<editorjs type='carousel-item' url="{url}" caption="{caption}" />"""
+
+    @classmethod
+    def to_json(cls, node: MDChildNode) -> list[dict]:
+        return [
+            {
+                "url": node.get("url", ""),
+                "caption": node.get("caption", ""),
+            }
+        ]
+
+    @classmethod
+    def to_text(cls, node: MDChildNode) -> str:
+        return "<todo>"
+
+
+@block("carousel")
+class CarouselBlock(EditorJSBlock):
+    @classmethod
+    def to_markdown(cls, data: EditorChildData) -> str:
+        items = data.get("items")
+        items_html = "".join(CarouselItemBlock.to_markdown(item) for item in items)
+        return f"<editorjs type='carousel'>{items_html}</editorjs>\n\n"
+
+    @classmethod
+    def to_json(cls, node: MDChildNode) -> list[dict]:
+        raise TODO(node)
+
+    @classmethod
+    def to_text(cls, node: MDChildNode) -> str:
+        raise TODO(node)
 
 
 ### end blocks
@@ -847,7 +896,14 @@ class EditorJSCustom(EditorJSBlock, markdown2.Extra):
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
         html = "".join(_["value"] for _ in node.get("children", []))
+
+        # fixme: cls.parse_html misses a lot of data
+        #        for nested. `type` and `data` are not set correctly
+        print(html)
+        0 / 0
+
         handler, attrs = cls._find_right_block(html)
+
         return handler.to_json(attrs)
 
     @classmethod
