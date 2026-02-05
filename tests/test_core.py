@@ -2,6 +2,7 @@ import json
 import textwrap
 
 from editorjs import EditorJS
+from editorjs.blocks import EditorJSCustom
 
 EXAMPLE_MD = textwrap.dedent("""
     # Heading
@@ -293,3 +294,37 @@ def test_quotes():
         e.to_html(),
         e.to_markdown(),
     )
+
+
+# test case based on issue HETNIEUWELEIDEN-019c28cd-56b8-7778-be0c-60fb9e930638
+
+
+def test_nonrecusrive_attr_parser():
+    html = "<div type='outer'><div type='inner'>contents</div></div>"
+
+    attributes, data = EditorJSCustom.parse_html(html)
+
+    assert attributes == {"type": "outer"}
+    assert data == '<div type="inner">contents</div>'
+
+
+def test_editorjs_alignment_tag():
+    """Test that editorjs alignment tags with nested HTML are parsed correctly."""
+    md_input = "<editorjs type='alignment' tag='p' alignment='center'> <b>Werk dat ertoe doet </b> </editorjs>"
+
+    e = EditorJS.from_markdown(md_input)
+
+    print("MDAST:", e.to_mdast())
+    print("Markdown:", e.to_markdown())
+    print("JSON:", e.to_json())
+
+    html = e.to_html()
+    print("HTML:", html)
+
+    # The type should be detected as 'alignment' (or mapped to 'paragraph' with alignment tune)
+    blocks = json.loads(e.to_json())
+
+    assert blocks
+
+    assert "<b>Werk dat ertoe doet" in html
+    assert "<editorjs" not in html

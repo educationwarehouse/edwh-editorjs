@@ -5,11 +5,11 @@ mdast to editorjs
 import abc
 import re
 import typing as t
-from html.parser import HTMLParser
 from urllib.parse import urlparse
 
 import html2markdown
 import humanize
+import lxml.html
 import markdown2
 
 from .exceptions import TODO, Unreachable
@@ -796,20 +796,6 @@ class EmbedBlock(EditorJSBlock):
 ### end blocks
 
 
-class AttributeParser(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.attributes = {}
-        self.data = None
-
-    def handle_starttag(self, tag, attrs):
-        # Collect attributes when the tag is encountered
-        self.attributes = dict(attrs)
-
-    def handle_data(self, data):
-        self.data = data
-
-
 class EditorJSCustom(EditorJSBlock, markdown2.Extra):
     """
     Special type of block to deal with custom attributes.
@@ -822,10 +808,29 @@ class EditorJSCustom(EditorJSBlock, markdown2.Extra):
 
     @classmethod
     def parse_html(cls, html: str):
-        parser = AttributeParser()
-        parser.feed(html)
+        """
+        Extract attributes from the outermost HTML element and return its inner HTML.
 
-        return parser.attributes, parser.data
+        This function parses the provided markup, identifies the root element,
+        returns its attributes as a dictionary, and serializes all direct child
+        nodes back into an HTML string.
+
+        Args:
+            html: A string containing a single root HTML element.
+
+        Returns:
+            A tuple of:
+                - dict[str, str]: Attributes of the root element
+                - str: Inner HTML of the root element
+        """
+        root = lxml.html.fromstring(html)
+
+        attributes = dict(root.attrib)
+        inner_html = "".join(
+            lxml.html.tostring(child, encoding="unicode") for child in root
+        )
+
+        return attributes, inner_html
 
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
@@ -840,6 +845,7 @@ class EditorJSCustom(EditorJSBlock, markdown2.Extra):
         handler = BLOCKS.get(_type)
 
         if not handler:
+            raise ValueError(f"debug: {attrs = } {body = }")  # fixme
             raise ValueError(f"Unknown custom type {_type}")
 
         return handler, attrs

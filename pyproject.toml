@@ -31,6 +31,7 @@ dependencies = [
     "markdown2",  # markdown -> html
     "html2markdown", # html -> markdown
     "humanize",
+    "lxml",
 ]
 
 [project.optional-dependencies]
