@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.6.2 (2026-02-05)
+
+### Fix
+
+* **custom:** Preserve inner text and tail content in HTML parsing ([`f432744`](https://github.com/educationwarehouse/edwh-editorjs/commit/f43274495faca52fdbc4fdd3f300a637981a3332))
+
 ## v2.6.1 (2026-02-05)
 
 ### Fix
