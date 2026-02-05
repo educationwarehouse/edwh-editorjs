@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.6.1 (2026-02-05)
+
+### Fix
+
+* **paragraph:** Handle nested HTML in alignment tag closing detection ([`7f910e1`](https://github.com/educationwarehouse/edwh-editorjs/commit/7f910e15103fe25ae0e4d1158deecc15d267d926))
+
 ## v2.6.0 (2026-02-05)
 
 ### Fix
