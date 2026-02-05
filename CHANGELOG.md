@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.6.0 (2026-02-05)
+
+### Fix
+
+* **custom:** Replace recursive html parser with lxml to only parse outer layer and keep inner HTML intact ([`8a8908c`](https://github.com/educationwarehouse/edwh-editorjs/commit/8a8908c30708573df11f2011b24fda8c4984de21))
+
 ## v2.5.0 (2025-03-20)
 
 ### Feature
