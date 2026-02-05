@@ -328,3 +328,48 @@ def test_editorjs_alignment_tag():
 
     assert "<b>Werk dat ertoe doet" in html
     assert "<editorjs" not in html
+    assert "<code" not in html
+
+
+def test_alignment_with_nested_bold_roundtrip():
+    """
+    Test that alignment tags preserve nested bold HTML through JSON roundtrip.
+
+    Regression test for issue where nested HTML in alignment tags causes:
+    - Text content to disappear
+    - Malformed closing tags to appear as separate raw blocks
+    """
+    # Input: three paragraphs with different alignments, one with nested bold
+    input_json = r"""{"time":1770292823347,"blocks":[{"id":"QKelxSHz2Y","type":"paragraph","data":{"text":"rechts basis"},"tunes":{"alignmentTune":{"alignment":"right"}}},{"id":"IUX70yigzz","type":"paragraph","data":{"text":"links"},"tunes":{"alignmentTune":{"alignment":"left"}}},{"id":"SaWthD_Vlr","type":"paragraph","data":{"text":"<b>rechts duur</b>"},"tunes":{"alignmentTune":{"alignment":"right"}}}],"version":"2.30.7"}"""
+    # faulty output: {"time": 1770292880600, "blocks": [{"type": "paragraph", "data": {"text": ""}, "tunes": {"alignmentTune": {"alignment": "right"}}}, {"type": "paragraph", "data": {"text": "links"}}, {"type": "paragraph", "data": {"text": "<b></b>"}, "tunes": {"alignmentTune": {"alignment": "right"}}}, {"type": "raw", "data": {"html": "</b></editorjs>"}}], "version": "2.30.6"}
+
+    e = EditorJS.from_json(input_json)
+
+    # Convert through markdown and back to JSON
+    md = e.to_markdown()
+    print("Markdown output:", md)
+
+    e2 = EditorJS.from_markdown(md)
+    output_json = json.loads(e2.to_json())
+
+    output_str = json.dumps(output_json, indent=2)
+    print("Output JSON:", output_str)
+
+    # Should have exactly 3 blocks (not 4 with a malformed raw block)
+    assert len(output_json["blocks"]) == 3
+
+    # All should be paragraphs (not raw blocks)
+    for block in output_json["blocks"]:
+        assert block["type"] == "paragraph"
+
+    # Third block should preserve the bold content
+    assert (
+        "<b>rechts duur</b>" in output_json["blocks"][2]["data"]["text"]
+        or "<b>rechts duur </b>" in output_json["blocks"][2]["data"]["text"]
+    )
+
+    # Third block should preserve alignment
+    assert output_json["blocks"][2]["tunes"]["alignmentTune"]["alignment"] == "right"
+
+    assert "raw" not in output_str
+    assert "html" not in output_str

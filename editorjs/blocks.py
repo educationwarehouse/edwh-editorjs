@@ -187,6 +187,18 @@ class ParagraphBlock(EditorJSBlock):
 
         return f"{text}\n\n"
 
+    @staticmethod
+    def _find_closing_editorjs_tag(nodes: list, start_idx: int) -> int | None:
+        """Find index of closing </editorjs> tag."""
+        for idx, node in enumerate(nodes[start_idx:], start=start_idx):
+            if (
+                node.get("type") == "html"
+                and node.get("value", "").strip() == "</editorjs>"
+            ):
+                return idx
+
+        return None
+
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
         result = []
@@ -210,14 +222,17 @@ class ParagraphBlock(EditorJSBlock):
 
                 if child.get("value", "").endswith("/>"):
                     # self-closing
-                    result.append(EditorJSCustom.to_json(node))
+                    result.append(EditorJSCustom.to_json({"children": [child]}))
                 else:
-                    # <editorjs>something</editorjs> = 3 children
-                    result.extend(
-                        EditorJSCustom.to_json({"children": nodes[idx : idx + 2]})
+                    # <editorjs>...</editorjs> may include nested HTML; find the closing tag
+                    end_idx = cls._find_closing_editorjs_tag(nodes, idx + 1)
+                    children_slice = (
+                        nodes[idx : idx + 2]
+                        if end_idx is None
+                        else nodes[idx : end_idx + 1]
                     )
-
-                    skip = 2
+                    skip = 2 if end_idx is None else end_idx - idx
+                    result.extend(EditorJSCustom.to_json({"children": children_slice}))
 
                 continue
 
