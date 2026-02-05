@@ -841,8 +841,11 @@ class EditorJSCustom(EditorJSBlock, markdown2.Extra):
         root = lxml.html.fromstring(html)
 
         attributes = dict(root.attrib)
-        inner_html = "".join(
-            lxml.html.tostring(child, encoding="unicode") for child in root
+
+        # support both innerText + innerHTML:
+        inner_html = (root.text or "") + "".join(
+            lxml.html.tostring(child, encoding="unicode", with_tail=True)
+            for child in root
         )
 
         return attributes, inner_html
@@ -860,7 +863,6 @@ class EditorJSCustom(EditorJSBlock, markdown2.Extra):
         handler = BLOCKS.get(_type)
 
         if not handler:
-            raise ValueError(f"debug: {attrs = } {body = }")  # fixme
             raise ValueError(f"Unknown custom type {_type}")
 
         return handler, attrs

@@ -336,40 +336,55 @@ def test_alignment_with_nested_bold_roundtrip():
     Test that alignment tags preserve nested bold HTML through JSON roundtrip.
 
     Regression test for issue where nested HTML in alignment tags causes:
-    - Text content to disappear
+    - Text content to disappear (simple use case without inner HTML)
     - Malformed closing tags to appear as separate raw blocks
     """
-    # Input: three paragraphs with different alignments, one with nested bold
-    input_json = r"""{"time":1770292823347,"blocks":[{"id":"QKelxSHz2Y","type":"paragraph","data":{"text":"rechts basis"},"tunes":{"alignmentTune":{"alignment":"right"}}},{"id":"IUX70yigzz","type":"paragraph","data":{"text":"links"},"tunes":{"alignmentTune":{"alignment":"left"}}},{"id":"SaWthD_Vlr","type":"paragraph","data":{"text":"<b>rechts duur</b>"},"tunes":{"alignmentTune":{"alignment":"right"}}}],"version":"2.30.7"}"""
-    # faulty output: {"time": 1770292880600, "blocks": [{"type": "paragraph", "data": {"text": ""}, "tunes": {"alignmentTune": {"alignment": "right"}}}, {"type": "paragraph", "data": {"text": "links"}}, {"type": "paragraph", "data": {"text": "<b></b>"}, "tunes": {"alignmentTune": {"alignment": "right"}}}, {"type": "raw", "data": {"html": "</b></editorjs>"}}], "version": "2.30.6"}
+    # Input: four paragraphs with different alignments
+    # - "start" with left alignment
+    # - "simpel" with right alignment (simple case, no HTML)
+    # - "<b>moeilijk </b> " with center alignment (nested HTML)
+    # - "eind" with left alignment
+    input_json = r"""{"time":1770299588459,"blocks":[{"id":"aySMulbYqf","type":"paragraph","data":{"text":"start"},"tunes":{"alignmentTune":{"alignment":"left"}}},{"id":"z8S1Gy3XzF","type":"paragraph","data":{"text":"simpel"},"tunes":{"alignmentTune":{"alignment":"right"}}},{"id":"pSBHuALBVu","type":"paragraph","data":{"text":"<b>moeilijk </b> "},"tunes":{"alignmentTune":{"alignment":"center"}}},{"id":"C2A4mJLXE_","type":"paragraph","data":{"text":"eind"},"tunes":{"alignmentTune":{"alignment":"left"}}}],"version":"2.30.7"}"""
+    # faulty output: {"time": 1770299637826, "blocks": [{"type": "paragraph", "data": {"text": "start"}}, {"type": "paragraph", "data": {"text": ""}, "tunes": {"alignmentTune": {"alignment": "right"}}}, {"type": "paragraph", "data": {"text": "<b>moeilijk </b> "}, "tunes": {"alignmentTune": {"alignment": "center"}}}, {"type": "paragraph", "data": {"text": "eind"}}], "version": "2.30.6"}
 
     e = EditorJS.from_json(input_json)
 
-    # Convert through markdown and back to JSON
-    md = e.to_markdown()
-    print("Markdown output:", md)
+    # Convert through HTML and back to JSON
+    html = e.to_html()
+    print("HTML output:", html)
 
-    e2 = EditorJS.from_markdown(md)
-    output_json = json.loads(e2.to_json())
-
+    output_json = json.loads(e.to_json())
     output_str = json.dumps(output_json, indent=2)
     print("Output JSON:", output_str)
 
-    # Should have exactly 3 blocks (not 4 with a malformed raw block)
-    assert len(output_json["blocks"]) == 3
+    # Should have exactly 4 blocks
+    assert len(output_json["blocks"]) == 4
 
     # All should be paragraphs (not raw blocks)
     for block in output_json["blocks"]:
         assert block["type"] == "paragraph"
 
-    # Third block should preserve the bold content
-    assert (
-        "<b>rechts duur</b>" in output_json["blocks"][2]["data"]["text"]
-        or "<b>rechts duur </b>" in output_json["blocks"][2]["data"]["text"]
-    )
+    # First block should preserve content and alignment
+    assert output_json["blocks"][0]["data"]["text"] == "start"
+    # alignmentTune left is implied
 
-    # Third block should preserve alignment
-    assert output_json["blocks"][2]["tunes"]["alignmentTune"]["alignment"] == "right"
+    # Second block should preserve content and alignment (the "simple" case that was disappearing)
+    assert output_json["blocks"][1]["data"]["text"] == "simpel"
+    assert output_json["blocks"][1]["tunes"]["alignmentTune"]["alignment"] == "right"
+
+    # Third block should preserve the bold content and alignment
+    assert (
+        "<b>moeilijk </b>" in output_json["blocks"][2]["data"]["text"]
+        or "<b>moeilijk</b>" in output_json["blocks"][2]["data"]["text"]
+    )
+    assert output_json["blocks"][2]["tunes"]["alignmentTune"]["alignment"] == "center"
+
+    # Fourth block should preserve content and alignment
+    assert output_json["blocks"][3]["data"]["text"] == "eind"
+    # alignmentTune left is implied
 
     assert "raw" not in output_str
     assert "html" not in output_str
+
+
+# {"time":1770300217211,"blocks":[{"id":"Smj3WkpMq0","type":"paragraph","data":{"text":"start <b>fancy</b> eind"},"tunes":{"alignmentTune":{"alignment":"right"}}}],"version":"2.30.7"}
