@@ -1,10 +1,10 @@
 import json
 import typing as t
 import warnings
-from typing_extensions import Self
 
 import markdown2
 import mdast
+from typing_extensions import Self
 
 from .blocks import BLOCKS
 from .helpers import unix_timestamp
@@ -134,7 +134,6 @@ class EditorJS:
         Export HTML string
         """
         md = self.to_markdown()
-        # todo: deal with custom elements like linktool, attaches
         return self._md.convert(md)
 
     def __repr__(self):

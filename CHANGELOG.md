@@ -2,6 +2,30 @@
 
 <!--next-version-placeholder-->
 
+## v2.6.2 (2026-02-05)
+
+### Fix
+
+* **custom:** Preserve inner text and tail content in HTML parsing ([`f432744`](https://github.com/educationwarehouse/edwh-editorjs/commit/f43274495faca52fdbc4fdd3f300a637981a3332))
+
+## v2.6.1 (2026-02-05)
+
+### Fix
+
+* **paragraph:** Handle nested HTML in alignment tag closing detection ([`7f910e1`](https://github.com/educationwarehouse/edwh-editorjs/commit/7f910e15103fe25ae0e4d1158deecc15d267d926))
+
+## v2.6.0 (2026-02-05)
+
+### Fix
+
+* **custom:** Replace recursive html parser with lxml to only parse outer layer and keep inner HTML intact ([`8a8908c`](https://github.com/educationwarehouse/edwh-editorjs/commit/8a8908c30708573df11f2011b24fda8c4984de21))
+
+## v2.5.0 (2025-03-20)
+
+### Feature
+
+* Improve markdown conversion and image handling in EditorJS blocks ([`80d0fc0`](https://github.com/educationwarehouse/edwh-editorjs/commit/80d0fc00a4e39b279de35998d1a85a37282c58a7))
+
 ## v2.4.0 (2024-12-02)
 
 ### Feature

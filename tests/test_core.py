@@ -2,6 +2,7 @@ import json
 import textwrap
 
 from editorjs import EditorJS
+from editorjs.blocks import EditorJSCustom
 
 EXAMPLE_MD = textwrap.dedent("""
     # Heading
@@ -185,7 +186,8 @@ asdfsdajgdsjaklgkjds
 
 
 def test_code():
-    e = EditorJS.from_markdown(textwrap.dedent("""
+    e = EditorJS.from_markdown(
+        textwrap.dedent("""
     Read code:
     
     ```
@@ -193,7 +195,8 @@ def test_code():
     ```
     
     End of code
-    """))
+    """)
+    )
 
     blocks = json.loads(e.to_json())
 
@@ -256,6 +259,135 @@ def test_image_options():
     print(e.to_markdown())
     print(e.to_html())
     print(e.to_json())
+
+
+def test_figcaption():
+    js = """{"time":1742471258492,"blocks":[{"id":"ZoA3rbc05C","type":"image","data":{"caption":"Party Time!","withBorder":false,"withBackground":false,"stretched":false,"file":{"url":"https://py4web.leiden.dockers.local/img/upload/23.png?hash=979795a433fc15cb94eccb3159f1f1e4054b1664"}}}],"version":"2.30.7"}"""
+    e = EditorJS.from_json(js)
+
+    html = e.to_html()
+
+    assert "figcaption" in html
+
+
+def test_bold():
+    js = """{"time":1742475802066,"blocks":[{"id":"v_Kc51dnJH","type":"paragraph","data":{"text":"Deze tekst is <b>half bold</b> en half niet"},"tunes":{"alignmentTune":{"alignment":"left"}}},{"id":"q_fkuEFcY5","type":"paragraph","data":{"text":"<b>Deze tekst is heel bold</b>"},"tunes":{"alignmentTune":{"alignment":"left"}}}],"version":"2.30.7"}"""
+
+    e = EditorJS.from_json(js)
+
+    print(
+        e._mdast,
+        e.to_json(),
+        e.to_html(),
+        e.to_markdown(),
+    )
+
+
+def test_quotes():
+    js = """{"time":1742477286420,"blocks":[{"id":"PpmEaxeSkq","type":"quote","data":{"text":"To baldly go where no bald man has ever gone before","caption":"a bald guy","alignment":"left"}},{"id":"26ERFQ6U3V","type":"quote","data":{"text":"Einstein was een sukkel","caption":"Einstein's ex vrouw","alignment":"left"}},{"id":"RB8AdaCd86","type":"quote","data":{"text":"Asdf","caption":"fsda-man","alignment":"left"}},{"id":"BCSus2rhUr","type":"paragraph","data":{"text":"groetjes"},"tunes":{"alignmentTune":{"alignment":"left"}}}],"version":"2.30.7"}"""
+
+    e = EditorJS.from_json(js)
+
+    print(
+        e._mdast,
+        e.to_json(),
+        e.to_html(),
+        e.to_markdown(),
+    )
+
+
+# test case based on issue HETNIEUWELEIDEN-019c28cd-56b8-7778-be0c-60fb9e930638
+
+
+def test_nonrecusrive_attr_parser():
+    html = "<div type='outer'><div type='inner'>contents</div></div>"
+
+    attributes, data = EditorJSCustom.parse_html(html)
+
+    assert attributes == {"type": "outer"}
+    assert data == '<div type="inner">contents</div>'
+
+
+def test_editorjs_alignment_tag():
+    """Test that editorjs alignment tags with nested HTML are parsed correctly."""
+    md_input = "<editorjs type='alignment' tag='p' alignment='center'> <b>Werk dat ertoe doet </b> </editorjs>"
+
+    e = EditorJS.from_markdown(md_input)
+
+    print("MDAST:", e.to_mdast())
+    print("Markdown:", e.to_markdown())
+    print("JSON:", e.to_json())
+
+    html = e.to_html()
+    print("HTML:", html)
+
+    # The type should be detected as 'alignment' (or mapped to 'paragraph' with alignment tune)
+    blocks = json.loads(e.to_json())
+
+    assert blocks
+
+    assert "<b>Werk dat ertoe doet" in html
+    assert "<editorjs" not in html
+    assert "<code" not in html
+
+
+def test_alignment_with_nested_bold_roundtrip():
+    """
+    Test that alignment tags preserve nested bold HTML through JSON roundtrip.
+
+    Regression test for issue where nested HTML in alignment tags causes:
+    - Text content to disappear (simple use case without inner HTML)
+    - Malformed closing tags to appear as separate raw blocks
+    """
+    # Input: four paragraphs with different alignments
+    # - "start" with left alignment
+    # - "simpel" with right alignment (simple case, no HTML)
+    # - "<b>moeilijk </b> " with center alignment (nested HTML)
+    # - "eind" with left alignment
+    input_json = r"""{"time":1770299588459,"blocks":[{"id":"aySMulbYqf","type":"paragraph","data":{"text":"start"},"tunes":{"alignmentTune":{"alignment":"left"}}},{"id":"z8S1Gy3XzF","type":"paragraph","data":{"text":"simpel"},"tunes":{"alignmentTune":{"alignment":"right"}}},{"id":"pSBHuALBVu","type":"paragraph","data":{"text":"<b>moeilijk </b> "},"tunes":{"alignmentTune":{"alignment":"center"}}},{"id":"C2A4mJLXE_","type":"paragraph","data":{"text":"eind"},"tunes":{"alignmentTune":{"alignment":"left"}}}],"version":"2.30.7"}"""
+    # faulty output: {"time": 1770299637826, "blocks": [{"type": "paragraph", "data": {"text": "start"}}, {"type": "paragraph", "data": {"text": ""}, "tunes": {"alignmentTune": {"alignment": "right"}}}, {"type": "paragraph", "data": {"text": "<b>moeilijk </b> "}, "tunes": {"alignmentTune": {"alignment": "center"}}}, {"type": "paragraph", "data": {"text": "eind"}}], "version": "2.30.6"}
+
+    e = EditorJS.from_json(input_json)
+
+    # Convert through HTML and back to JSON
+    html = e.to_html()
+    print("HTML output:", html)
+
+    output_json = json.loads(e.to_json())
+    output_str = json.dumps(output_json, indent=2)
+    print("Output JSON:", output_str)
+
+    # Should have exactly 4 blocks
+    assert len(output_json["blocks"]) == 4
+
+    # All should be paragraphs (not raw blocks)
+    for block in output_json["blocks"]:
+        assert block["type"] == "paragraph"
+
+    # First block should preserve content and alignment
+    assert output_json["blocks"][0]["data"]["text"] == "start"
+    # alignmentTune left is implied
+
+    # Second block should preserve content and alignment (the "simple" case that was disappearing)
+    assert output_json["blocks"][1]["data"]["text"] == "simpel"
+    assert output_json["blocks"][1]["tunes"]["alignmentTune"]["alignment"] == "right"
+
+    # Third block should preserve the bold content and alignment
+    assert (
+        "<b>moeilijk </b>" in output_json["blocks"][2]["data"]["text"]
+        or "<b>moeilijk</b>" in output_json["blocks"][2]["data"]["text"]
+    )
+    assert output_json["blocks"][2]["tunes"]["alignmentTune"]["alignment"] == "center"
+
+    # Fourth block should preserve content and alignment
+    assert output_json["blocks"][3]["data"]["text"] == "eind"
+    # alignmentTune left is implied
+
+    assert "raw" not in output_str
+    assert "html" not in output_str
+
+
+# {"time":1770300217211,"blocks":[{"id":"Smj3WkpMq0","type":"paragraph","data":{"text":"start <b>fancy</b> eind"},"tunes":{"alignmentTune":{"alignment":"right"}}}],"version":"2.30.7"}
 
 
 def test_carousel():

@@ -3,13 +3,14 @@ mdast to editorjs
 """
 
 import abc
-from html import escape, unescape
 import re
 import typing as t
-from html.parser import HTMLParser
+from html import escape, unescape
 from urllib.parse import urlparse
 
+import html2markdown
 import humanize
+import lxml.html
 import markdown2
 
 from .exceptions import TODO, Unreachable
@@ -54,6 +55,7 @@ def process_styled_content(item: MDChildNode, strict: bool = True) -> str:
         A formatted HTML string based on the item type.
     """
     _type = item.get("type")
+
     html_wrappers = {
         "text": "{value}",
         "html": "{value}",
@@ -83,9 +85,16 @@ def process_styled_content(item: MDChildNode, strict: bool = True) -> str:
 
 
 def default_to_text(node: MDChildNode):
-    return "".join(
-        process_styled_content(child) for child in node.get("children", [])
-    ) or process_styled_content(node)
+    if node["type"] == "paragraph":
+        return "".join(
+            process_styled_content(child) for child in node.get("children", [])
+        )
+    else:
+        return process_styled_content(node)
+
+    # return "".join(
+    #     process_styled_content(child) for child in node.get("children", [])
+    # ) or process_styled_content(node)
 
 
 @block("heading", "header")
@@ -174,7 +183,22 @@ class ParagraphBlock(EditorJSBlock):
                 }
             )
 
+        # deal with bold etc:
+        text = html2markdown.convert(text)
+
         return f"{text}\n\n"
+
+    @staticmethod
+    def _find_closing_editorjs_tag(nodes: list, start_idx: int) -> int | None:
+        """Find index of closing </editorjs> tag."""
+        for idx, node in enumerate(nodes[start_idx:], start=start_idx):
+            if (
+                node.get("type") == "html"
+                and node.get("value", "").strip() == "</editorjs>"
+            ):
+                return idx
+
+        return None
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
@@ -199,14 +223,17 @@ class ParagraphBlock(EditorJSBlock):
 
                 if child.get("value", "").endswith("/>"):
                     # self-closing
-                    result.append(EditorJSCustom.to_json(node))
+                    result.append(EditorJSCustom.to_json({"children": [child]}))
                 else:
-                    # <editorjs>something</editorjs> = 3 children
-                    result.extend(
-                        EditorJSCustom.to_json({"children": nodes[idx : idx + 2]})
+                    # <editorjs>...</editorjs> may include nested HTML; find the closing tag
+                    end_idx = cls._find_closing_editorjs_tag(nodes, idx + 1)
+                    children_slice = (
+                        nodes[idx : idx + 2]
+                        if end_idx is None
+                        else nodes[idx : end_idx + 1]
                     )
-
-                    skip = 2
+                    skip = 2 if end_idx is None else end_idx - idx
+                    result.extend(EditorJSCustom.to_json({"children": children_slice}))
 
                 continue
 
@@ -385,7 +412,7 @@ class CodeBlock(EditorJSBlock):
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
         code = data.get("code", "")
-        return f"```\n" f"{code}" f"\n```\n"
+        return f"```\n{code}\n```\n"
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
@@ -412,11 +439,8 @@ class ImageBlock(EditorJSBlock):
         with_background = "1" if data.get("withBackground") else ""
         stretched = "1" if data.get("stretched") else ""
 
-        if any((with_border, with_background, stretched)):
-            # custom type to support custom options:
-            return f"""<editorjs type="image" caption="{caption}" border="{with_border}" background="{with_background}" stretched="{stretched}" url="{url}" />\n\n"""
-        else:
-            return f"""![{caption}]({url} "{caption}")\n\n"""
+        # always custom type so we can render as <figure> instead of markdown2's default (simple <img>)
+        return f"""<editorjs type="image" caption="{caption}" border="{with_border}" background="{with_background}" stretched="{stretched}" url="{url}" />\n\n"""
 
     @classmethod
     def _caption(cls, node: MDChildNode):
@@ -447,11 +471,14 @@ class ImageBlock(EditorJSBlock):
         border = node.get("border") or ""
 
         return f"""
-        <div class="ce-block {stretched and 'ce-block--stretched'}">
+        <div class="ce-block {stretched and "ce-block--stretched"}">
             <div class="ce-block__content">
-            <div class="cdx-block image-tool image-tool--filled {background and 'image-tool--withBackground'} {stretched and 'image-tool--stretched'} {border and 'image-tool--withBorder'}">
+            <div class="cdx-block image-tool image-tool--filled {background and "image-tool--withBackground"} {stretched and "image-tool--stretched"} {border and "image-tool--withBorder"}">
                 <div class="image-tool__image">
-                    <img class="image-tool__image-picture" src="{url}" title="{caption}" alt="{caption}">
+                    <figure>
+                        <img class="image-tool__image-picture" src="{url}" title="{caption}" alt="{caption}">
+                        <figcaption>{caption}</figcaption>
+                    </figure>
                 </div>
             </div>
         </div>
@@ -468,7 +495,7 @@ class QuoteBlock(EditorJSBlock):
         result = f"> {text}\n"
         if caption := data.get("caption", ""):
             result += f"> <cite>{caption}</cite>\n"
-        return result
+        return result + "\n"
 
     @classmethod
     def to_json(cls, node: MDChildNode) -> list[dict]:
@@ -494,12 +521,13 @@ class QuoteBlock(EditorJSBlock):
 
     @classmethod
     def to_text(cls, node: MDChildNode) -> str:
-        return default_to_text(node)
+        return "".join(
+            process_styled_content(child) for child in node.get("children", [])
+        )
 
 
 @block("raw", "html")
 class RawBlock(EditorJSBlock):
-
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
         text = data.get("html", "")
@@ -522,7 +550,6 @@ class RawBlock(EditorJSBlock):
 
 @block("table")
 class TableBlock(EditorJSBlock):
-
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
         """
@@ -641,7 +668,6 @@ class LinkBlock(EditorJSBlock):
 
 @block("attaches")
 class AttachmentBlock(EditorJSBlock):
-
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
         title = data.get("title", "")
@@ -706,7 +732,7 @@ class AttachmentBlock(EditorJSBlock):
                 </div>
                 {file_size}
             </div>
-            <a class="cdx-attaches__download-button" href="{node.get('file', '')}" target="_blank" rel="nofollow noindex noreferrer" title="{node.get('name', '')}">
+            <a class="cdx-attaches__download-button" href="{node.get("file", "")}" target="_blank" rel="nofollow noindex noreferrer" title="{node.get("name", "")}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M7 10L11.8586 14.8586C11.9367 14.9367 12.0633 14.9367 12.1414 14.8586L17 10"></path></svg>
             </a>
         </div>
@@ -758,7 +784,6 @@ class AlignmentBlock(EditorJSBlock):
 
 @block("embed")
 class EmbedBlock(EditorJSBlock):
-
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:
         service = data.get("service", "")
@@ -857,20 +882,6 @@ class CarouselBlock(EditorJSBlock):
 ### end blocks
 
 
-class AttributeParser(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.attributes = {}
-        self.data = []
-
-    def handle_starttag(self, tag, attrs):
-        # Collect attributes when the tag is encountered
-        self.attributes = dict(attrs)
-
-    def handle_data(self, data):
-        self.data.append(data)
-
-
 class CarouselImageParser(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -902,16 +913,32 @@ class EditorJSCustom(EditorJSBlock, markdown2.Extra):
 
     @classmethod
     def parse_html(cls, html: str):
-        parser = AttributeParser()
-        parser.feed(html)
-        body = "".join(parser.data)
+        """
+        Extract attributes from the outermost HTML element and return its inner HTML.
 
-        if html.startswith("<editorjs") and html.endswith("</editorjs>"):
-            start = html.find(">")
-            if start != -1:
-                body = html[start + 1 : -len("</editorjs>")]
+        This function parses the provided markup, identifies the root element,
+        returns its attributes as a dictionary, and serializes all direct child
+        nodes back into an HTML string.
 
-        return parser.attributes, body
+        Args:
+            html: A string containing a single root HTML element.
+
+        Returns:
+            A tuple of:
+                - dict[str, str]: Attributes of the root element
+                - str: Inner HTML of the root element
+        """
+        root = lxml.html.fromstring(html)
+
+        attributes = dict(root.attrib)
+
+        # support both innerText + innerHTML:
+        inner_html = (root.text or "") + "".join(
+            lxml.html.tostring(child, encoding="unicode", with_tail=True)
+            for child in root
+        )
+
+        return attributes, inner_html
 
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:

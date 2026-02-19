@@ -27,10 +27,12 @@ requires-python = ">=3.10"
 
 dependencies = [
     # "bleach",
-    "mdast",
-    "markdown2",
+    "mdast", # markdown -> ast
+    "markdown2",  # markdown -> html
+    "html2markdown", # html -> markdown
     "humanize",
     "typing-extensions",
+    "lxml",
 ]
 
 [project.optional-dependencies]
