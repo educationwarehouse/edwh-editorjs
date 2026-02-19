@@ -7,7 +7,6 @@ import mdast
 from typing_extensions import Self
 
 from .blocks import BLOCKS
-from .exceptions import TODO
 from .helpers import unix_timestamp
 from .types import MDRootNode
 

@@ -388,3 +388,19 @@ def test_alignment_with_nested_bold_roundtrip():
 
 
 # {"time":1770300217211,"blocks":[{"id":"Smj3WkpMq0","type":"paragraph","data":{"text":"start <b>fancy</b> eind"},"tunes":{"alignmentTune":{"alignment":"right"}}}],"version":"2.30.7"}
+
+
+def test_carousel():
+    json_blocks = r"""[{"id":"Ux6UsvAooS","type":"carousel","data":{"items":[{"url":"https://wl.dockers.local/thumb/asset/c98a4f0d-2b2b-4f91-ab07-726af9643692.png?hash=4e6a14fb3d4532209cb0fe6c56bb945d3e6c784b","caption":"a"},{"url":"https://wl.dockers.local/thumb/asset/8cb10d4b-0ac8-4775-9e88-8b7738076f37.png?hash=5cca78f5f8d3310d6e85162c7d60a2dd033de397","caption":"b"},{"url":"https://wl.dockers.local/thumb/asset/bc56c21c-86b9-424e-9f71-80e4b62bbef9.png?hash=808663f48fba7cd0761342576419dd639c67d927","caption":"c"}],"config":"standard","countItemEachRow":"3"}},{"id":"JJS5e9R3Fl","type":"carousel","data":{"items":[{"url":"https://wl.dockers.local/thumb/asset/170390be-17b2-4d7e-ad17-fce03415f95f.png?hash=08ed2e794d7548e95e16641a654b4aa08bd98096","caption":"1"},{"url":"https://wl.dockers.local/thumb/asset/87e58483-a15c-4083-9c84-0eee19261515.png?hash=c1c1606c3f991270d8696abdabc590d21f3f93d1","caption":"2"}],"config":"masonry","countItemEachRow":"2"}}]"""
+
+    e = EditorJS.from_json(json_blocks)
+    blocks = json.loads(e.to_json())["blocks"]
+
+    assert blocks[0]["type"] == "carousel"
+    assert blocks[1]["type"] == "carousel"
+    assert blocks[0]["data"]["config"] == "standard"
+    assert blocks[1]["data"]["config"] == "masonry"
+    assert blocks[0]["data"]["countItemEachRow"] == "3"
+    assert blocks[1]["data"]["countItemEachRow"] == "2"
+    assert len(blocks[0]["data"]["items"]) == 3
+    assert len(blocks[1]["data"]["items"]) == 2
