@@ -481,6 +481,7 @@ class ImageBlock(EditorJSBlock):
                     </figure>
                 </div>
             </div>
+            </div>
         </div>
         """
 
