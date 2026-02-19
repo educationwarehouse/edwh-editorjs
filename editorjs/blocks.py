@@ -835,7 +835,7 @@ class CarouselBlock(EditorJSBlock):
         body = "".join(body_parts)
         return (
             f"<editorjs type='carousel' style='{escape(style, quote=True)}' "
-            f"items_per_row='{escape(items_per_row, quote=True)}'>{body}</editorjs>\n\n"
+            f"items-per-row='{escape(items_per_row, quote=True)}'>{body}</editorjs>\n\n"
         )
 
     @classmethod
@@ -844,30 +844,28 @@ class CarouselBlock(EditorJSBlock):
         if style not in cls.allowed_styles:
             style = "standard"
 
-        items_parser = CarouselImageParser()
-        items_parser.feed(str(node.get("body", "")))
+        items = CarouselImageParser.parse(str(node.get("body", "")))
 
         return [
             {
                 "type": "carousel",
                 "data": {
-                    "items": items_parser.items,
+                    "items": items,
                     "config": style,
-                    "countItemEachRow": str(node.get("items_per_row", "")),
+                    "countItemEachRow": str(node.get("items-per-row", "")),
                 },
             }
         ]
 
     @classmethod
     def to_text(cls, node: MDChildNode) -> str:
-        items_parser = CarouselImageParser()
-        items_parser.feed(str(node.get("body", "")))
+        items = CarouselImageParser.parse(str(node.get("body", "")))
 
         style = str(node.get("style", "standard"))
-        items_per_row = str(node.get("items_per_row", ""))
+        items_per_row = str(node.get("items-per-row", ""))
         rendered_items = []
 
-        for item in items_parser.items:
+        for item in items:
             rendered_items.append(
                 f"""<div class="carousel-tool__item">{ImageBlock.to_text(item)}</div>"""
             )
@@ -882,23 +880,26 @@ class CarouselBlock(EditorJSBlock):
 ### end blocks
 
 
-class CarouselImageParser(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.items: list[dict[str, str]] = []
+class CarouselImageParser:
+    @classmethod
+    def parse(cls, html: str) -> list[dict[str, str]]:
+        if not html.strip():
+            return []
 
-    def handle_starttag(self, tag, attrs):
-        attrs_dict = dict(attrs)
-        if tag != "editorjs":
-            return
-        if attrs_dict.get("type", "") != "image":
-            return
-        self.items.append(
-            {
-                "url": unescape(attrs_dict.get("url", "")),
-                "caption": unescape(attrs_dict.get("caption", "")),
-            }
-        )
+        try:
+            root = lxml.html.fragment_fromstring(html, create_parent="div")
+        except (lxml.etree.ParserError, ValueError):
+            return []
+
+        items = []
+        for node in root.xpath(".//editorjs[@type='image']"):
+            items.append(
+                {
+                    "url": unescape(node.attrib.get("url", "")),
+                    "caption": unescape(node.attrib.get("caption", "")),
+                }
+            )
+        return items
 
 
 class EditorJSCustom(EditorJSBlock, markdown2.Extra):
