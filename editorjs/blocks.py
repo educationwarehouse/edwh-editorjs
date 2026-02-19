@@ -3,6 +3,7 @@ mdast to editorjs
 """
 
 import abc
+from html import escape, unescape
 import re
 import typing as t
 from html.parser import HTMLParser
@@ -783,6 +784,76 @@ class EmbedBlock(EditorJSBlock):
         """
 
 
+@block("carousel")
+class CarouselBlock(EditorJSBlock):
+    allowed_styles = {"standard", "carousel", "masonry"}
+
+    @classmethod
+    def to_markdown(cls, data: EditorChildData) -> str:
+        style = str(data.get("config", "standard"))
+        if style not in cls.allowed_styles:
+            style = "standard"
+
+        items_per_row = str(data.get("countItemEachRow", ""))
+        items = data.get("items", [])
+
+        body_parts = []
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            url = escape(str(item.get("url", "")), quote=True)
+            caption = escape(str(item.get("caption", "")))
+            body_parts.append(
+                f"<editorjs type='image' url='{url}' caption='{caption}'/>"
+            )
+
+        body = "".join(body_parts)
+        return (
+            f"<editorjs type='carousel' style='{escape(style, quote=True)}' "
+            f"items_per_row='{escape(items_per_row, quote=True)}'>{body}</editorjs>\n\n"
+        )
+
+    @classmethod
+    def to_json(cls, node: MDChildNode) -> list[dict]:
+        style = str(node.get("style", "standard"))
+        if style not in cls.allowed_styles:
+            style = "standard"
+
+        items_parser = CarouselImageParser()
+        items_parser.feed(str(node.get("body", "")))
+
+        return [
+            {
+                "type": "carousel",
+                "data": {
+                    "items": items_parser.items,
+                    "config": style,
+                    "countItemEachRow": str(node.get("items_per_row", "")),
+                },
+            }
+        ]
+
+    @classmethod
+    def to_text(cls, node: MDChildNode) -> str:
+        items_parser = CarouselImageParser()
+        items_parser.feed(str(node.get("body", "")))
+
+        style = str(node.get("style", "standard"))
+        items_per_row = str(node.get("items_per_row", ""))
+        rendered_items = []
+
+        for item in items_parser.items:
+            rendered_items.append(
+                f"""<div class="carousel-tool__item">{ImageBlock.to_text(item)}</div>"""
+            )
+
+        return (
+            f"""<div class="cdx-block carousel-tool" data-style="{escape(style, quote=True)}" data-items-per-row="{escape(items_per_row, quote=True)}">"""
+            f"""{"".join(rendered_items)}"""
+            """</div>"""
+        )
+
+
 ### end blocks
 
 
@@ -790,14 +861,33 @@ class AttributeParser(HTMLParser):
     def __init__(self):
         super().__init__()
         self.attributes = {}
-        self.data = None
+        self.data = []
 
     def handle_starttag(self, tag, attrs):
         # Collect attributes when the tag is encountered
         self.attributes = dict(attrs)
 
     def handle_data(self, data):
-        self.data = data
+        self.data.append(data)
+
+
+class CarouselImageParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.items: list[dict[str, str]] = []
+
+    def handle_starttag(self, tag, attrs):
+        attrs_dict = dict(attrs)
+        if tag != "editorjs":
+            return
+        if attrs_dict.get("type", "") != "image":
+            return
+        self.items.append(
+            {
+                "url": unescape(attrs_dict.get("url", "")),
+                "caption": unescape(attrs_dict.get("caption", "")),
+            }
+        )
 
 
 class EditorJSCustom(EditorJSBlock, markdown2.Extra):
@@ -814,8 +904,14 @@ class EditorJSCustom(EditorJSBlock, markdown2.Extra):
     def parse_html(cls, html: str):
         parser = AttributeParser()
         parser.feed(html)
+        body = "".join(parser.data)
 
-        return parser.attributes, parser.data
+        if html.startswith("<editorjs") and html.endswith("</editorjs>"):
+            start = html.find(">")
+            if start != -1:
+                body = html[start + 1 : -len("</editorjs>")]
+
+        return parser.attributes, body
 
     @classmethod
     def to_markdown(cls, data: EditorChildData) -> str:

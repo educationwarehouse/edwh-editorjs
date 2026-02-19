@@ -30,6 +30,7 @@ dependencies = [
     "mdast",
     "markdown2",
     "humanize",
+    "typing-extensions",
 ]
 
 [project.optional-dependencies]
